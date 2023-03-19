@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using OrderApi.Models;
 using System;
+using Shared;
 
 namespace OrderApi.Data
 {
@@ -19,12 +19,19 @@ namespace OrderApi.Data
                 return;   // DB has been seeded
             }
 
+            List<OrderLine> orderLines = new List<OrderLine>()
+            {
+                new OrderLine() {ProductId = 1, Quantity = 2,},
+                new OrderLine() {ProductId = 4, Quantity = 1,}
+            };
+
             List<Order> orders = new List<Order>
             {
-                new Order { Date = DateTime.Today, ProductId = 1, Quantity = 2 }
+                new Order { Date = DateTime.Today, OrderLines = orderLines }
             };
 
             context.Orders.AddRange(orders);
+            context.OrderLines.AddRange(orderLines);
             context.SaveChanges();
         }
     }

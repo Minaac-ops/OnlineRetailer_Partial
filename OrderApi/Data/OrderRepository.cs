@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using OrderApi.Models;
 using System;
+using Shared;
 
 namespace OrderApi.Data
 {
@@ -38,7 +38,22 @@ namespace OrderApi.Data
 
         IEnumerable<Order> IRepository<Order>.GetAll()
         {
-            return db.Orders.ToList();
+            var select = db.Orders.Select(order => new Order()
+            {
+                Id = order.Id,
+                Date = order.Date,
+                OrderLines = order.OrderLines.Select(ol => new OrderLine()
+                {
+                    Id = ol.Id,
+                    ProductId = ol.ProductId,
+                    Quantity = ol.Quantity
+                }).ToList(),
+            });
+            foreach (var VARIABLE in select)
+            {
+                Console.WriteLine(VARIABLE);
+            }
+            return select.ToList();
         }
 
         void IRepository<Order>.Remove(int id)

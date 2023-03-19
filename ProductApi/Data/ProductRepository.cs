@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using ProductApi.Models;
+using Shared;
 
 namespace ProductApi.Data
 {
@@ -21,10 +21,19 @@ namespace ProductApi.Data
             return newProduct;
         }
 
-        void IRepository<Product>.Edit(Product entity)
+        async void IRepository<Product>.Edit(int id,Product entity)
         {
-            db.Entry(entity).State = EntityState.Modified;
-            db.SaveChanges();
+            var productToModify = await db.Products.FindAsync(id);
+
+            if (productToModify == null) return;
+            
+            productToModify.Name = entity.Name;
+            productToModify.Price = entity.Price;
+            productToModify.ItemsInStock = entity.ItemsInStock;
+            productToModify.ItemsReserved = entity.ItemsReserved;
+            
+            db.Entry(productToModify).State = EntityState.Modified;
+            await db.SaveChangesAsync();
         }
 
         Product IRepository<Product>.Get(int id)

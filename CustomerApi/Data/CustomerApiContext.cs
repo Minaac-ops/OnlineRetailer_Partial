@@ -1,16 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Shared;
 
-namespace OrderApi.Data
+namespace CustomerApi.Data
 {
-    public class OrderApiContext : DbContext
+    public class CustomerApiContext : DbContext
     {
-        public OrderApiContext(DbContextOptions<OrderApiContext> options)
+        public CustomerApiContext(DbContextOptions<CustomerApiContext> options)
             : base(options)
         {
         }
 
-        public DbSet<Order> Orders { get; set; }
+        public DbSet<Customer> Customers { get; set; }
         public DbSet<OrderLine> OrderLines { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

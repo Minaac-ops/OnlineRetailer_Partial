@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using ProductApi.Data;
-using ProductApi.Models;
+using Shared;
 
 namespace ProductApi.Controllers
 {
@@ -58,19 +58,7 @@ namespace ProductApi.Controllers
                 return BadRequest();
             }
 
-            var modifiedProduct = repository.Get(id);
-
-            if (modifiedProduct == null)
-            {
-                return NotFound();
-            }
-
-            modifiedProduct.Name = product.Name;
-            modifiedProduct.Price = product.Price;
-            modifiedProduct.ItemsInStock = product.ItemsInStock;
-            modifiedProduct.ItemsReserved = product.ItemsReserved;
-
-            repository.Edit(modifiedProduct);
+            repository.Edit(id, product);
             return new NoContentResult();
         }
 
