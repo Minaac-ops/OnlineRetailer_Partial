@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks;
 using Shared;
 
 namespace CustomerApi.Data
@@ -14,14 +16,14 @@ namespace CustomerApi.Data
             db = context;
         }
         
-        Customer IRepository<Customer>.Get(int id)
+        async Task<Customer> IRepository<Customer>.Get(int id)
         {
-            return db.Customers.FirstOrDefault(o => o.Id == id);
+            return await db.Customers.FirstOrDefaultAsync(c => c.Id == id) ?? throw new InvalidOperationException();
         }
 
-        IEnumerable<Customer> IRepository<Customer>.GetAll()
+        async Task<IEnumerable<Customer>> IRepository<Customer>.GetAll()
         {
-            var select = db.Customers.Select(customer => new Customer()
+            var select = await db.Customers.Select(customer => new Customer()
             {
                 Id = customer.Id,
                 CompanyName = customer.CompanyName,
@@ -29,27 +31,36 @@ namespace CustomerApi.Data
                 PhoneNo = customer.PhoneNo,
                 BillingAddress = customer.BillingAddress,
                 ShippingAddress = customer.ShippingAddress
-            });
-            return select.ToList();
+            }).ToListAsync();
+            if (select==null)
+            {
+                throw new Exception("Customers couldn't be fetched");
+            }
+            return select;
         }
 
-        Customer IRepository<Customer>.Add(Customer entity)
+        async Task<Customer> IRepository<Customer>.Add(Customer entity)
         {
-            var newCustomer = db.Customers.Add(entity).Entity;
-            if (entity.BillingAddress==null)
+            var newCustomer = await db.Customers.AddAsync(entity);
+            entity.BillingAddress ??= entity.ShippingAddress;
+
+            if (newCustomer == null)
             {
-                entity.BillingAddress = entity.ShippingAddress;
+                throw new Exception("Customer couldn't be added to the database.");
             }
             
-            db.SaveChanges();
-            return newCustomer;
+            await db.SaveChangesAsync();
+            return newCustomer.Entity;
         }
 
-        public async void Edit(int id,Customer entity)
+        public async Task Edit(int id,Customer entity)
         {
             var customerToUpdate = await db.Customers.FindAsync(id);
 
-            if (customerToUpdate == null) return;
+            if (customerToUpdate == null)
+            {
+                throw new Exception("Couldn't find customer with id " + id+" to update.");
+            }
             customerToUpdate.Email = entity.Email;
             customerToUpdate.BillingAddress = entity.BillingAddress;
             customerToUpdate.ShippingAddress = entity.ShippingAddress;

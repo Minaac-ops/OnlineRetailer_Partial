@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ProductApi.Data
 {
     public interface IRepository<T>
     {
-        IEnumerable<T> GetAll();
-        T Get(int id);
-        T Add(T entity);
-        void Edit(int id,T entity);
+        Task<IEnumerable<T>> GetAll();
+        Task<T> Get(int id);
+        Task<T> Add(T entity);
+        Task Edit(int id,T entity);
         void Remove(int id);
     }
 }

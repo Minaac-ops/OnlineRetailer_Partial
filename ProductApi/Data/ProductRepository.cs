@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks;
 using Shared;
 
 namespace ProductApi.Data
@@ -14,14 +15,14 @@ namespace ProductApi.Data
             db = context;
         }
 
-        Product IRepository<Product>.Add(Product entity)
+        async Task<Product> IRepository<Product>.Add(Product entity)
         {
-            var newProduct = db.Products.Add(entity).Entity;
-            db.SaveChanges();
-            return newProduct;
+            var newProduct =await db.Products.AddAsync(entity);
+            await db.SaveChangesAsync();
+            return newProduct.Entity;
         }
 
-        async void IRepository<Product>.Edit(int id,Product entity)
+        async Task IRepository<Product>.Edit(int id,Product entity)
         {
             var productToModify = await db.Products.FindAsync(id);
 
@@ -36,14 +37,14 @@ namespace ProductApi.Data
             await db.SaveChangesAsync();
         }
 
-        Product IRepository<Product>.Get(int id)
+        async Task<Product> IRepository<Product>.Get(int id)
         {
-            return db.Products.FirstOrDefault(p => p.Id == id);
+            return await db.Products.FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        IEnumerable<Product> IRepository<Product>.GetAll()
+        async Task<IEnumerable<Product>> IRepository<Product>.GetAll()
         {
-            return db.Products.ToList();
+            return await db.Products.ToListAsync();
         }
 
         void IRepository<Product>.Remove(int id)

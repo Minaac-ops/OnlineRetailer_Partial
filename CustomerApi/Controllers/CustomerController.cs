@@ -1,10 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CustomerApi.Data;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Shared;
 
@@ -22,45 +18,49 @@ namespace CustomerApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] Customer customer)
+        public async Task<Customer> Post([FromBody] Customer customer)
         {
-            if (customer == null)
+            try
             {
-                return BadRequest();
+                if (customer==null)
+                {
+                    throw new Exception("Customer can't be null.");
+                }
+                var newCustomer = await _repository.Add(customer);
+                return newCustomer;
             }
-
-            var newCustomer = _repository.Add(customer);
-            if (newCustomer!=null)
+            catch (Exception e)
             {
-                return CreatedAtRoute(new {id = newCustomer.Id}, newCustomer);
+                throw new Exception("Customer was not created due to error " + e.Message);
             }
-
-            return NoContent();
         }
 
         // GET orders/5
         [HttpGet("{id}", Name = "GetCustomer")]
-        public IActionResult Get(int id)
+        public async Task<Customer> Get(int id)
         {
-            var item = _repository.Get(id);
-            if (item == null)
+            try
             {
-                return NotFound();
+                var item = await _repository.Get(id);
+                return item;
             }
-            return new ObjectResult(item);
+            catch (Exception e)
+            {
+                throw new Exception("Customer with id " + id+" couldn't be found due to error " +e.Message);
+            }
         }
 
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] Customer customer)
+        public async Task Put(int id, [FromBody] Customer customer)
         {
-            if (customer == null)
+            try
             {
-                return BadRequest();
+                await _repository.Edit(id,customer);
             }
-
-            _repository.Edit(id,customer);
-
-            return new NoContentResult();
+            catch (Exception e)
+            {
+                throw new Exception("Customer with id "+ id+" could not be updated due to error " + e.Message);
+            }
         }
     }
 }

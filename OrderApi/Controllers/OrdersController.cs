@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using RestSharp;
@@ -20,75 +21,78 @@ namespace OrderApi.Controllers
 
         // GET: orders
         [HttpGet]
-        public IEnumerable<Order> Get()
+        public async Task<IEnumerable<Order>> Get()
         {
-            return repository.GetAll();
+            try
+            {
+                return await repository.GetAll();
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Orders couldn't be displayed due to error " + e.Message);
+            }
+            
         }
 
         // GET orders/5
         [HttpGet("{id}", Name = "GetOrder")]
-        public IActionResult Get(int id)
+        public async Task<Order> Get(int id)
         {
-            var item = repository.Get(id);
-            if (item == null)
+            try
             {
-                return NotFound();
+                var item = await repository.Get(id);
+                return item;
             }
-            return new ObjectResult(item);
+            catch (Exception e)
+            {
+                throw new Exception("Order with id "+id+" couldn't be displayed due to error "+e.Message);
+            }
+            
         }
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody]Order order)
+        public async Task<Order> Post([FromBody]Order order)
         {
-            if (order == null)
+            try
             {
-                return BadRequest();
-            }
-
-            RestClient customer = new RestClient("http://localhost:5060");
-            var requestCustomer = new RestRequest("Customer/"+order.CustomerId.ToString());
-            var responseCustomer = customer.GetAsync<Customer>(requestCustomer);
-            responseCustomer.Wait();
-            var result = responseCustomer.Result;
-
-            if (result == null)
-            {
-                return BadRequest("You need to register as a customer first!");
-            }
-
-            // Call ProductApi to get the product ordered
-            // You may need to change the port number in the BaseUrl below
-            // before you can run the request.
-            RestClient c = new RestClient("http://localhost:5000");
-
-            foreach (var item in order.OrderLines)
-            {
-                var request = new RestRequest("Products/"+item.ProductId.ToString());
-                var response = c.GetAsync<Product>(request);
-                response.Wait();
-                var orderedProduct = response.Result;
-
-                if (item.Quantity <= orderedProduct.ItemsInStock - orderedProduct.ItemsReserved)
+                //Checking if order is null
+                if (order == null) throw new Exception("Fill out order details.");
+                
+                //Calling customer service to find the customer to check if customer is created
+                var customerService = new RestClient("http://host.docker.internal:8000");
+                var requestCust = new RestRequest("Customer/"+order.CustomerId);
+                var responseCust = await customerService.GetAsync<Customer>(requestCust);
+                if (responseCust == null) throw new Exception("Not able to get a response from ProductService");
+                
+                // Call ProductApi to get the products ordered.
+                var productService = new RestClient("http://host.docker.internal:8002");
+                
+                foreach (var item in order.OrderLines)
                 {
+                    var request = new RestRequest("Products/"+item.ProductId);
+                    var response = await productService.GetAsync<Product>(request);
+                    if (response == null) throw new Exception("Not able to get a response from ProductService");
+
+                    if (item.Quantity > response.ItemsInStock - response.ItemsReserved) continue;
                     // reduce the number of items in stock for the ordered product,
                     // and create a new order.
-                    orderedProduct.ItemsReserved += item.Quantity;
-                    var updateRequest = new RestRequest(orderedProduct.Id.ToString());
-                    updateRequest.AddJsonBody(orderedProduct);
-                    var updateResponse = c.PutAsync(updateRequest);
+                    response.ItemsReserved += item.Quantity;
+                    var updateRequest = new RestRequest(response.Id.ToString());
+                    updateRequest.AddJsonBody(response);
+                    var updateResponse = productService.PutAsync(updateRequest);
                     updateResponse.Wait();
 
-                    if (updateResponse.IsCompletedSuccessfully)
-                    {
-                        var newOrder = repository.Add(order);
-                        return CreatedAtRoute("GetOrder",
-                            new { id = newOrder.Id }, newOrder);
-                    }
+                    if (!updateResponse.IsCompletedSuccessfully) continue;
+                    var newOrder = await repository.Add(order);
+                    return newOrder;
                 }
             }
-            // If the order could not be created, "return no content".
-            return NoContent();
+            catch (Exception e)
+            {
+                throw new Exception("Order couldn't be created due to error "+ e.Message);
+            }
+            return null;
         }
 
     }
