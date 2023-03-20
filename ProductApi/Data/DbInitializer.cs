@@ -18,11 +18,11 @@ namespace ProductApi.Data
                 return;   // DB has been seeded
             }
 
-            List<Product> products = new List<Product>
+            List<ProductDto> products = new List<ProductDto>
             {
-                new Product { Name = "Hammer", Price = 100, ItemsInStock = 10, ItemsReserved = 0 },
-                new Product { Name = "Screwdriver", Price = 70, ItemsInStock = 20, ItemsReserved = 0 },
-                new Product { Name = "Drill", Price = 500, ItemsInStock = 2, ItemsReserved = 0 }
+                new ProductDto { Name = "Hammer", Price = 100, ItemsInStock = 10, ItemsReserved = 0 },
+                new ProductDto { Name = "Screwdriver", Price = 70, ItemsInStock = 20, ItemsReserved = 0 },
+                new ProductDto { Name = "Drill", Price = 500, ItemsInStock = 2, ItemsReserved = 0 }
             };
 
             context.Products.AddRange(products);

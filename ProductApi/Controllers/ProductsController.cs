@@ -11,16 +11,16 @@ namespace ProductApi.Controllers
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly IRepository<Product> repository;
+        private readonly IRepository<ProductDto> repository;
 
-        public ProductsController(IRepository<Product> repos)
+        public ProductsController(IRepository<ProductDto> repos)
         {
             repository = repos;
         }
 
         // GET products
         [HttpGet]
-        public async Task<IEnumerable<Product>> Get()
+        public async Task<IEnumerable<ProductDto>> Get()
         {
             try
             {
@@ -34,7 +34,7 @@ namespace ProductApi.Controllers
 
         // GET products/5
         [HttpGet("{id}", Name="GetProduct")]
-        public async Task<Product> Get(int id)
+        public async Task<ProductDto> Get(int id)
         {
             try
             {
@@ -50,13 +50,13 @@ namespace ProductApi.Controllers
 
         // POST products
         [HttpPost]
-        public async Task<Product> Post([FromBody]Product product)
+        public async Task<ProductDto> Post([FromBody]ProductDto productDto)
         {
             try
             {
-                if (product == null) throw new Exception("Fill out product details.");
+                if (productDto == null) throw new Exception("Fill out product details.");
                 
-                var newProduct = await repository.Add(product);
+                var newProduct = await repository.Add(productDto);
 
                 return newProduct;
             }
@@ -68,15 +68,15 @@ namespace ProductApi.Controllers
 
         // PUT products/5
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody]Product product)
+        public async Task Put(int id, [FromBody]ProductDto productDto)
         {
             try
             {
-                if (product == null || product.Id != id)
+                if (productDto == null || productDto.Id != id)
                 {
                     throw new Exception("Product or product id has to be filled out.");
                 }
-                await repository.Edit(id, product);
+                await repository.Edit(id, productDto);
             }
             catch (Exception e)
             {

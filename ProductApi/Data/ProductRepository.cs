@@ -6,7 +6,7 @@ using Shared;
 
 namespace ProductApi.Data
 {
-    public class ProductRepository : IRepository<Product>
+    public class ProductRepository : IRepository<ProductDto>
     {
         private readonly ProductApiContext db;
 
@@ -15,14 +15,14 @@ namespace ProductApi.Data
             db = context;
         }
 
-        async Task<Product> IRepository<Product>.Add(Product entity)
+        async Task<ProductDto> IRepository<ProductDto>.Add(ProductDto entity)
         {
             var newProduct =await db.Products.AddAsync(entity);
             await db.SaveChangesAsync();
             return newProduct.Entity;
         }
 
-        async Task IRepository<Product>.Edit(int id,Product entity)
+        async Task IRepository<ProductDto>.Edit(int id,ProductDto entity)
         {
             var productToModify = await db.Products.FindAsync(id);
 
@@ -37,17 +37,17 @@ namespace ProductApi.Data
             await db.SaveChangesAsync();
         }
 
-        async Task<Product> IRepository<Product>.Get(int id)
+        async Task<ProductDto> IRepository<ProductDto>.Get(int id)
         {
             return await db.Products.FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        async Task<IEnumerable<Product>> IRepository<Product>.GetAll()
+        async Task<IEnumerable<ProductDto>> IRepository<ProductDto>.GetAll()
         {
             return await db.Products.ToListAsync();
         }
 
-        void IRepository<Product>.Remove(int id)
+        void IRepository<ProductDto>.Remove(int id)
         {
             var product = db.Products.FirstOrDefault(p => p.Id == id);
             db.Products.Remove(product);

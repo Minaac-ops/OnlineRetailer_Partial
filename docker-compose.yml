@@ -28,3 +28,8 @@ services:
       - 8002:80
     deploy:
       replicas: 1
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "15673:15672"
