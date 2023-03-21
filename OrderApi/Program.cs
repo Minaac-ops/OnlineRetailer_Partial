@@ -1,10 +1,9 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
+using OrderApi.Models;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +29,7 @@ builder.Services.AddDbContext<OrderApiContext>(opt => opt.UseInMemoryDatabase("O
 
 // Register repositories for dependency injection
 builder.Services.AddScoped<IRepository<Order>, OrderRepository>();
+builder.Services.AddSingleton<IConverter<Order, OrderDto>, OrderConverter>();
 
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();

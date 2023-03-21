@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
 using System.Threading.Tasks;
+using OrderApi.Models;
 using Shared;
 
 namespace OrderApi.Data
@@ -18,6 +19,7 @@ namespace OrderApi.Data
 
         async Task<Order> IRepository<Order>.Add(Order entity)
         {
+            Console.WriteLine(entity);
             if (entity == null)
             {
                 throw new Exception("An empty order can't be saved to the database.");
@@ -51,10 +53,13 @@ namespace OrderApi.Data
                 {
                     Id = order.Id,
                     Date = order.Date,
+                    CustomerId = order.CustomerId,
+                    Status = order.Status,
                     OrderLines = order.OrderLines.Select(ol => new OrderLine()
                     {
                         Id = ol.Id,
                         ProductId = ol.ProductId,
+                        OrderId = ol.OrderId,
                         Quantity = ol.Quantity
                     }).ToList(),
                 }).FirstOrDefaultAsync();
@@ -67,11 +72,13 @@ namespace OrderApi.Data
             {
                 Id = order.Id,
                 Date = order.Date,
+                CustomerId = order.CustomerId,
                 OrderLines = order.OrderLines.Select(ol => new OrderLine()
                 {
                     Id = ol.Id,
                     ProductId = ol.ProductId,
-                    Quantity = ol.Quantity
+                    Quantity = ol.Quantity,
+                    OrderId = ol.OrderId,
                 }).ToList(),
             });
             return await select.ToListAsync();

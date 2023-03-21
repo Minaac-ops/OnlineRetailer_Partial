@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
-using RestSharp;
+using OrderApi.Models;
 using Shared;
 
 namespace OrderApi.Controllers
@@ -16,14 +16,17 @@ namespace OrderApi.Controllers
         private readonly IRepository<Order> repository;
         private IServiceGateway<ProductDto> productServiceGateway;
         private IMessagePublisher _messagePublisher;
+        private IConverter<Order,OrderDto> _converter;
 
         public OrdersController(IRepository<Order> repos,
                                 IServiceGateway<ProductDto> gateway,
-                                IMessagePublisher publisher)
+                                IMessagePublisher publisher,
+                                IConverter<Order,OrderDto> orderConverter)
         {
             repository = repos;
             productServiceGateway = gateway;
             _messagePublisher = publisher;
+            _converter = orderConverter;
         }
 
         // GET: orders
@@ -59,9 +62,15 @@ namespace OrderApi.Controllers
 
         // POST orders
         [HttpPost]
-        public async Task<Order> Post([FromBody]Order order)
+        public async Task<OrderDto> Post([FromBody]OrderDto order)
         {
+            foreach (var orderline in order.OrderLines)
+            {
+                Console.WriteLine("orderlind før gemt " + orderline.OrderId);
+            }
+            Console.WriteLine(order.CustomerId);
             //Checking if order is null
+            
                 if (order == null) throw new Exception("Fill out order details.");
 
                 if (ProductItemsAvailable(order))
@@ -74,9 +83,13 @@ namespace OrderApi.Controllers
                             order.CustomerId,order.OrderLines,"completed");
                         
                         //Create order
-                        order.Status = Order.OrderStatus.Completed;
-                        var newOrder = repository.Add(order);
-                        return await newOrder;
+                        order.Status = OrderStatus.Completed;
+                        var newOrder = await repository.Add(_converter.Convert(order));
+                        foreach (var VARIABLE in newOrder.OrderLines)
+                        {
+                            Console.WriteLine("efter det er gemt " + VARIABLE.OrderId+VARIABLE.ProductId);
+                        }
+                        return _converter.Convert(newOrder);
                     }
                     catch (Exception e)
                     {
@@ -87,7 +100,7 @@ namespace OrderApi.Controllers
                 return order;
         }
 
-        private bool ProductItemsAvailable(Order order)
+        private bool ProductItemsAvailable(OrderDto order)
         {
             foreach (var orderline in order.OrderLines)
             {

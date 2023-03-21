@@ -1,4 +1,4 @@
-namespace Shared
+namespace CustomerApi.Models
 {
     public class Customer
     {

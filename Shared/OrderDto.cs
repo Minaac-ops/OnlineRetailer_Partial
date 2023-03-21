@@ -3,21 +3,21 @@ using System.Collections.Generic;
 
 namespace Shared
 {
-    public class Order
+    public class OrderDto
     {
         public int Id { get; set; }
         public DateTime? Date { get; set; }
         public OrderStatus Status { get; set; }
         public List<OrderLine> OrderLines { get; set; }
         public int CustomerId { get; set; }
-
-        public enum OrderStatus
-        {
-            Completed,
-            Cancelled,
-            Shipped,
-            Paid
-        }
+    }
+    
+    public enum OrderStatus
+    {
+        Completed,
+        Cancelled,
+        Shipped,
+        Paid
     }
 
     public class OrderLine
