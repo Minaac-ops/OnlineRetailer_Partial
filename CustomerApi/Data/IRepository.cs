@@ -9,7 +9,7 @@ namespace CustomerApi.Data
         Task<IEnumerable<T>> GetAll();
         Task<T> Get(int id);
         Task<T> Add(T entity);
-        Task Edit(int id, T Customer);
+        Task<T> Edit(int id, T entity);
         void Remove(int id);
     }
 }

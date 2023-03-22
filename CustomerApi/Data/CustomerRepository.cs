@@ -53,21 +53,16 @@ namespace CustomerApi.Data
             await db.SaveChangesAsync();
             return newCustomer.Entity;
         }
-
-        public async Task Edit(int id,Customer entity)
+        async Task<Customer> IRepository<Customer>.Edit(int id,Customer entity)
         {
-            var customerToUpdate = await db.Customers.FindAsync(id);
-
-            if (customerToUpdate == null)
-            {
-                throw new Exception("Couldn't find customer with id " + id+" to update.");
-            }
+            var customerToUpdate = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
             customerToUpdate.Email = entity.Email;
             customerToUpdate.BillingAddress = entity.BillingAddress;
             customerToUpdate.ShippingAddress = entity.ShippingAddress;
             
-            db.Entry(customerToUpdate).State = EntityState.Modified;
+            db.Customers.Entry(customerToUpdate).State = EntityState.Modified;
             await db.SaveChangesAsync();
+            return customerToUpdate;
         }
 
         public void Remove(int id)

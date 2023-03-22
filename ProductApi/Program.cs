@@ -18,7 +18,7 @@ string cloudAMQPConnectionString =
 builder.Services.AddDbContext<ProductApiContext>(opt => opt.UseInMemoryDatabase("ProductsDb"));
 
 // Register repositories for dependency injection
-builder.Services.AddScoped<IRepository<ProductDto>, ProductRepository>();
+builder.Services.AddScoped<IRepository<Product>, ProductRepository>();
 
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();

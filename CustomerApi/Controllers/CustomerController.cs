@@ -54,11 +54,12 @@ namespace CustomerApi.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task Put(int id, [FromBody] Customer customer)
+        public async Task<CustomerDto> Put(int id, [FromBody] CustomerDto customer)
         {
             try
             {
-                await _repository.Edit(id,customer);
+                var updatedCustomer = await _repository.Edit(id,_converter.Convert(customer));
+                return _converter.Convert(updatedCustomer);
             }
             catch (Exception e)
             {
