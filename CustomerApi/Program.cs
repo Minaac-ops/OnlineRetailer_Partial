@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using CustomerApi.Data;
+using CustomerApi.Infrastructure;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
-
+string cloudAMQPConnectionString =
+    "host=rabbitmq";
 // Add services to the container.
 
 builder.Services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase("CustomersDb"));
@@ -25,11 +28,6 @@ builder.Services.AddSingleton<IConverter<Customer, CustomerDto>, CustomerConvert
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 // Initialize the database.
 using (var scope = app.Services.CreateScope())
@@ -43,6 +41,10 @@ using (var scope = app.Services.CreateScope())
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 //app.UseHttpsRedirection();
+
+Task.Factory.StartNew(() =>
+    new MessageListener(app.Services, cloudAMQPConnectionString).Start());
+
 
 app.UseAuthorization();
 

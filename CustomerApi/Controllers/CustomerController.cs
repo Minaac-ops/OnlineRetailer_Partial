@@ -45,6 +45,7 @@ namespace CustomerApi.Controllers
             try
             {
                 var item = await _repository.Get(id);
+                
                 return _converter.Convert(item);
             }
             catch (Exception e)

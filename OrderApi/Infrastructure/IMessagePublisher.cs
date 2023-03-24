@@ -5,10 +5,9 @@ namespace OrderApi.Infrastructure
 {
     public interface IMessagePublisher
     {
-        public void Dispose();
-
-        public void PublishOrderStatusChangedMessage(int customerId, IList<OrderLine> orderlines, string topic);
-
-
+        void PublishOrderCreatedMessage(int? customerId, int orderId,
+            IList<OrderLine> orderLines);
+        void CreditStandingChangedMessage(int orderResultCustomerId);
+        void OrderStatusChangedMessage(int id, IList<OrderLine> orderLines, string topic);
     }
 }

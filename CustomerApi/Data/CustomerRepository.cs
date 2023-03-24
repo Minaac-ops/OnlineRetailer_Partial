@@ -17,7 +17,7 @@ namespace CustomerApi.Data
             db = context;
         }
         
-        async Task<Customer> IRepository<Customer>.Get(int id)
+        async Task<Customer> IRepository<Customer>.Get(int? id)
         {
             return await db.Customers.FirstOrDefaultAsync(c => c.Id == id) ?? throw new InvalidOperationException();
         }
@@ -68,6 +68,17 @@ namespace CustomerApi.Data
         public void Remove(int id)
         {
             throw new System.NotImplementedException();
+        }
+
+        public void ConfirmDelivered(int objCustomerId)
+        {
+            var customer = db.Customers.FirstOrDefaultAsync(c => c.Id == objCustomerId);
+            var result = customer.Result;
+
+            result.CreditStanding = true;
+
+            db.Customers.Entry(result).State = EntityState.Modified;
+            db.SaveChangesAsync();
         }
     }
 }

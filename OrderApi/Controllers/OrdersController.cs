@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
+using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
@@ -14,28 +15,34 @@ namespace OrderApi.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IRepository<Order> repository;
-        private IServiceGateway<ProductDto> productServiceGateway;
         private IMessagePublisher _messagePublisher;
         private IConverter<Order,OrderDto> _converter;
 
         public OrdersController(IRepository<Order> repos,
-                                IServiceGateway<ProductDto> gateway,
                                 IMessagePublisher publisher,
                                 IConverter<Order,OrderDto> orderConverter)
         {
             repository = repos;
-            productServiceGateway = gateway;
             _messagePublisher = publisher;
             _converter = orderConverter;
         }
 
         // GET: orders
         [HttpGet]
-        public async Task<IEnumerable<Order>> Get()
+        public IEnumerable<OrderDto> Get()
         {
             try
             {
-                return await repository.GetAll();
+                var orders = repository.GetAll();
+                var dtos = orders.Select(o => new OrderDto
+                {
+                    Id = o.Id,
+                    CustomerId = o.CustomerId,
+                    Date = o.Date,
+                    OrderLines = o.OrderLines,
+                    Status = o.Status
+                });
+                return dtos;
             }
             catch (Exception e)
             {
@@ -44,74 +51,153 @@ namespace OrderApi.Controllers
             
         }
 
-        // GET orders/5
-        [HttpGet("{id}", Name = "GetOrder")]
-        public async Task<Order> Get(int id)
+        [HttpGet("getByCustomer/{customerId}")]
+        public IEnumerable<OrderDto> GetByCustomerId(int customerId)
         {
             try
             {
-                var item = await repository.Get(id);
-                return item;
+                var items = repository.GetByCustomerId(customerId);
+                var dtos = items.Select(o => new OrderDto()
+                {
+                    Id = o.Id,
+                    CustomerId = o.CustomerId,
+                    Date = o.Date,
+                    OrderLines = o.OrderLines,
+                    Status = o.Status
+                });
+                return dtos;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        // GET orders/5
+        [HttpGet("{id}", Name = "GetOrder")]
+        public IActionResult Get(int id)
+        {
+            try
+            {
+                var item = repository.Get(id);
+                return new ObjectResult(item);
             }
             catch (Exception e)
             {
                 throw new Exception("Order with id "+id+" couldn't be displayed due to error "+e.Message);
             }
-            
         }
 
         // POST orders
         [HttpPost]
-        public async Task<OrderDto> Post([FromBody]OrderDto order)
+        public IActionResult Post([FromBody]OrderDto order)
         {
-            foreach (var orderline in order.OrderLines)
-            {
-                Console.WriteLine("orderlind før gemt " + orderline.OrderId);
-            }
-            Console.WriteLine(order.CustomerId);
             //Checking if order is null
-            
-                if (order == null) throw new Exception("Fill out order details.");
+            if (order == null) throw new Exception("Fill out order details.");
 
-                if (ProductItemsAvailable(order))
+            try
+            {
+                order.Status = OrderStatus.Tentative;
+                var newOrder = repository.Add(_converter.Convert(order));
+                
+                //publish orderstatuschanged
+
+                Console.WriteLine("before published");
+                _messagePublisher.PublishOrderCreatedMessage(newOrder.CustomerId, newOrder.Id, newOrder.OrderLines);
+                
+                Console.WriteLine("published");
+                
+                //wait until order status is "completed"
+                bool isCompleted = false;
+                while (!isCompleted)
                 {
-                    try
-                    {
-                        //Publish OrderStatusChangedMessage. If this operation fails, the order
-                        //will not be created
-                        _messagePublisher.PublishOrderStatusChangedMessage(
-                            order.CustomerId,order.OrderLines,"completed");
-                        
-                        //Create order
-                        order.Status = OrderStatus.Completed;
-                        var newOrder = await repository.Add(_converter.Convert(order));
-                        foreach (var VARIABLE in newOrder.OrderLines)
-                        {
-                            Console.WriteLine("efter det er gemt " + VARIABLE.OrderId+VARIABLE.ProductId);
-                        }
-                        return _converter.Convert(newOrder);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
+                    var tentativeOrder = repository.Get(newOrder.Id);
+                    if (tentativeOrder.Status == OrderStatus.Completed) isCompleted = true;
+                    Thread.Sleep(1000);
+                    
+                    Console.WriteLine("orderstatus changed");
                 }
-                return order;
+                return CreatedAtRoute("GetOrder", new { id = newOrder.Id }, newOrder);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
-        private bool ProductItemsAvailable(OrderDto order)
+        // PUT orders/5/ship
+        // This action method ships an order and publishes an OrderStatusChangedMessage.
+        // with topic set to "shipped".
+        [HttpPut("{id}/ship")]
+        public IActionResult Ship(int id)
         {
-            foreach (var orderline in order.OrderLines)
+            try
             {
-                //call productService to get the product ordered
-                var orderedProduct = productServiceGateway.Get(orderline.ProductId);
-                if (orderline.Quantity > orderedProduct.ItemsInStock - orderedProduct.ItemsReserved)
+                repository.Edit(id, new Order
                 {
-                    return false;
-                }
+                    Id = id,
+                    Status = OrderStatus.Shipped
+                });
+                var order = repository.Get(id);
+                _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"shipped");
+                return Ok();
             }
-            return true;
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        // PUT orders/5/pay
+        // This action method marks an order as paid and publishes a CreditStandingChangedMessage
+        // (which have not yet been implemented), if the credit standing changes.
+        [HttpPut("{id}/pay")]
+        public IActionResult Pay(int id)
+        {
+            try
+            {
+                var order = repository.Get(id);
+
+                repository.Edit(id, new Order()
+                {
+                    Id = id,
+                    Status = OrderStatus.Paid
+                });
+                _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            // Add code to implement this method.
+            return Ok();
+        }
+        
+        // PUT orders/5/cancel
+        // This action method cancels an order and publishes an OrderStatusChangedMessage
+        // with topic set to "cancelled".
+        [HttpPut("{id}/cancel")]
+        public IActionResult Cancel(int id)
+        {
+            try
+            {
+                repository.Edit(id, new Order
+                {
+                    Id = id,
+                    Status = OrderStatus.Cancelled
+                });
+                var order = repository.Get(id);
+                _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
     }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using OrderApi.Models;
 using Shared;
 
@@ -17,21 +18,27 @@ namespace OrderApi.Data
             db = context;
         }
 
-        async Task<Order> IRepository<Order>.Add(Order entity)
+        Order IRepository<Order>.Add(Order entity)
         {
-            Console.WriteLine(entity);
             if (entity == null)
             {
                 throw new Exception("An empty order can't be saved to the database.");
             }
             entity.Date ??= DateTime.Now;
             
-            var newOrder = await db.Orders.AddAsync(entity);
-            await db.SaveChangesAsync();
-            return newOrder.Entity;
+            var newOrder = db.Orders.Add(entity);
+            db.SaveChanges();;
+            return new Order
+            {
+                CustomerId = newOrder.Entity.CustomerId,
+                Date = newOrder.Entity.Date,
+                OrderLines = newOrder.Entity.OrderLines,
+                Id = newOrder.Entity.Id,
+                Status = newOrder.Entity.Status
+            };
         }
 
-        async Task IRepository<Order>.Edit(int id,Order entity)
+        async void IRepository<Order>.Edit(int id,Order entity)
         {
             var orderToUpdate = await db.Orders.FindAsync(id);
 
@@ -45,9 +52,9 @@ namespace OrderApi.Data
             await db.SaveChangesAsync();
         }
 
-        async Task<Order> IRepository<Order>.Get(int id)
+        Order IRepository<Order>.Get(int id)
         {
-            var entity = await db.Orders
+            var entity = db.Orders
                 .Where(o => o.Id == id)
                 .Select(order => new Order()
                 {
@@ -63,10 +70,10 @@ namespace OrderApi.Data
                         Quantity = ol.Quantity
                     }).ToList(),
                 }).FirstOrDefaultAsync();
-            return entity;
+            return entity.Result;
         }
 
-        async Task<IEnumerable<Order>> IRepository<Order>.GetAll()
+        IEnumerable<Order> IRepository<Order>.GetAll()
         {
             var select = db.Orders.Select(order => new Order()
             {
@@ -81,14 +88,35 @@ namespace OrderApi.Data
                     OrderId = ol.OrderId,
                 }).ToList(),
             });
-            return await select.ToListAsync();
+            return select.ToListAsync().Result;
         }
 
-        async Task IRepository<Order>.Remove(int id)
+        void IRepository<Order>.Remove(int id)
         {
-            var order = await db.Orders.FirstOrDefaultAsync(p => p.Id == id);
-            db.Orders.Remove(order);
-            await db.SaveChangesAsync();
+            var order = db.Orders.FirstOrDefaultAsync(p => p.Id == id);
+            db.Orders.Remove(order.Result);
+            db.SaveChangesAsync();
+        }
+
+        IEnumerable<Order> IRepository<Order>.GetByCustomerId(int customerId)
+        {
+            var entities = db.Orders
+                .Where(o => o.CustomerId == customerId)
+                .Select(order => new Order()
+                {
+                    Id = order.Id,
+                    Date = order.Date,
+                    CustomerId = order.CustomerId,
+                    Status = order.Status,
+                    OrderLines = order.OrderLines.Select(ol => new OrderLine()
+                    {
+                        Id = ol.Id,
+                        ProductId = ol.ProductId,
+                        OrderId = ol.OrderId,
+                        Quantity = ol.Quantity
+                    }).ToList(),
+                }).ToListAsync();
+            return entities.Result;
         }
     }
 }

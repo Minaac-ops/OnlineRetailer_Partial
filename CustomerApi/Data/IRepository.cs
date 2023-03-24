@@ -7,9 +7,10 @@ namespace CustomerApi.Data
     public interface IRepository<T>
     {
         Task<IEnumerable<T>> GetAll();
-        Task<T> Get(int id);
+        Task<T> Get(int? id);
         Task<T> Add(T entity);
         Task<T> Edit(int id, T entity);
         void Remove(int id);
+        void ConfirmDelivered(int objCustomerId);
     }
 }

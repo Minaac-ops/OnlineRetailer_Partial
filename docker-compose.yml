@@ -7,8 +7,8 @@ services:
       dockerfile: "CustomerApi/Dockerfile"
     ports:
       - 8000:80
-    deploy:
-     replicas: 1
+    depends_on:
+      - rabbitmq
   orderapi:
     build:
       context: .
@@ -16,18 +16,15 @@ services:
     ports:
       - 8001:80
     depends_on:
-      - customerapi
-      - productapi
-    deploy:
-      replicas: 1
+      - rabbitmq
   productapi:
     build:
       context: .
       dockerfile: "ProductApi/Dockerfile"
     ports:
       - 8002:80
-    deploy:
-      replicas: 1
+    depends_on:
+      - rabbitmq
 
   rabbitmq:
     image: rabbitmq:3-management

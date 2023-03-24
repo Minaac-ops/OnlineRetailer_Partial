@@ -29,9 +29,7 @@ namespace ProductApi.Data
 
             if (productToModify == null) return;
             
-            productToModify.Name = entity.Name;
-            productToModify.Price = entity.Price;
-            productToModify.ItemsInStock = entity.ItemsInStock;
+            productToModify.ItemsInStock-= entity.ItemsInStock;
             productToModify.ItemsReserved = entity.ItemsReserved;
             
             db.Entry(productToModify).State = EntityState.Modified;

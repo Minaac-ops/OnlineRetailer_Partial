@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +13,6 @@ var builder = WebApplication.CreateBuilder(args);
 // The product service (running as a container) listens on this URL for HTTP requests
 // from other services specified in the docker compose file (which in this solution is
 // the order service).
-string productServiceBaseUrl = "http://productapi/products/";
 
 // RabbitMQ connection string (I use CloudAMQP as a RabbitMQ server).
 // Remember to replace this connectionstring with your own.
@@ -34,11 +34,6 @@ builder.Services.AddSingleton<IConverter<Order, OrderDto>, OrderConverter>();
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();
 
-
-// Register product service gateway for dependency injection
-builder.Services.AddSingleton<IServiceGateway<ProductDto>>(new
-    ProductServiceGateway(productServiceBaseUrl));
-
 // Register MessagePublisher (a messaging gateway) for dependency injection
 builder.Services.AddSingleton<IMessagePublisher>(new
     MessagePublisher(cloudAMQPConnectionString));
@@ -51,11 +46,6 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
 
 // Initialize the database.
 using (var scope = app.Services.CreateScope())
@@ -70,7 +60,9 @@ app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(
 
 //app.UseHttpsRedirection();
 
-app.UseAuthorization();
+Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
+
+//app.UseAuthorization();
 
 app.MapControllers();
 

@@ -1,11 +1,12 @@
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Shared
 {
     public class OrderStatusChangedMessage
     {
-        //published by order api when an order is created.
-        public int CustomerId { get; set; }
-        public IList<OrderLine>? OrderLines { get; set; }
+        public int OrderId { get; set; }
+        public IList<OrderLine> OrderLine { get; set; }
+        public string Topic { get; set; }
     }
 }

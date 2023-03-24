@@ -14,6 +14,7 @@ namespace Shared
     
     public enum OrderStatus
     {
+        Tentative,
         Completed,
         Cancelled,
         Shipped,
