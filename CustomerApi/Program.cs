@@ -9,7 +9,7 @@ using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 string cloudAMQPConnectionString =
-    "host=rabbitmq";
+    "";
 // Add services to the container.
 
 builder.Services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase("CustomersDb"));

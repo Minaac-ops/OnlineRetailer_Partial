@@ -13,7 +13,7 @@ namespace ProductApi.Infrastructure
     {
         IServiceProvider provider;
         string connectionString;
-        IBus bus;
+        IBus _bus;
 
         // The service provider is passed as a parameter, because the class needs
         // access to the product repository. With the service provider, we can create
@@ -26,28 +26,22 @@ namespace ProductApi.Infrastructure
 
         public void Start()
         {
-            using (bus = RabbitHutch.CreateBus(connectionString))
+            Console.WriteLine("EnteredStart");
+            using (_bus = RabbitHutch.CreateBus(connectionString))
             {
-                bus.PubSub.Subscribe<OrderCreatedMessage>("newOrderCheck",
-                    HandleOrderCompleted);
+                _bus.PubSub.Subscribe<CreditStandingChangedMessage>("orderDelievered", HandleOrderDelivered);
+                
+                Console.WriteLine("subscribing to orderdelivered");
+                _bus.PubSub.Subscribe<OrderCreatedMessage>
+                ("checkProducts", HandleProductCheck,x=>x.WithTopic("checkProductAvailability"));
 
                 Console.WriteLine("subscribing to newordercheck");
-                bus.PubSub.Subscribe<CreditStandingChangedMessage>("orderDelievered", HandleOrderDelivered);
-                Console.WriteLine("subscribing to orderdelivered");
-                bus.PubSub.Subscribe<OrderStatusChangedMessage>("orderCancelled", HandleOrderCancelled,
+                
+                _bus.PubSub.Subscribe<OrderStatusChangedMessage>("orderCancelled", HandleOrderCancelled,
                     x => x.WithTopic("cancelled"));
+                
                 Console.WriteLine("subscribing to ordercancelled");
-                // Add code to subscribe to other OrderStatusChanged events:
-                // * cancelled
-                // * shipped
-                // * paid
-                // Implement an event handler for each of these events.
-                // Be careful that each subscribe has a unique subscription id
-                // (this is the first parameter to the Subscribe method). If they
-                // get the same subscription id, they will listen on the same
-                // queue.
-
-                // Block the thread so that it will not exit and stop subscribing.
+                
                 lock (this)
                 {
                     Monitor.Wait(this);
@@ -57,10 +51,26 @@ namespace ProductApi.Infrastructure
         }
 
         private void HandleOrderCancelled(OrderStatusChangedMessage obj)
-        {
+        { 
             using var scope = provider.CreateScope();
             var services = scope.ServiceProvider;
             var repo = services.GetService<IRepository<Product>>();
+
+            if (ProductItemsAvailable(obj.OrderLine, repo))
+            {
+                foreach (var orderLine in obj.OrderLine)
+                {
+                    var p = repo.Get(orderLine.ProductId);
+                    var pResult = p.Result;
+                    pResult.ItemsReserved += orderLine.Quantity;
+                    repo.Edit(p.Id,pResult);
+                }
+
+                var replyMessage = new OrderStatusChangedMessage
+                {
+                    OrderId = obj.OrderId,
+                };
+            }
 
             foreach (var orderLine in obj.OrderLine)
             {
@@ -75,9 +85,9 @@ namespace ProductApi.Infrastructure
         {
             
         }
-        private void HandleOrderCompleted(OrderCreatedMessage message)
+        private void HandleProductCheck(OrderCreatedMessage message)
         {
-            Console.WriteLine("hej handleordercompleted");
+            Console.WriteLine("ProductListener HandleProductCheck");
             // A service scope is created to get an instance of the product repository.
             // When the service scope is disposed, the product repository instance will
             // also be disposed.
@@ -103,7 +113,8 @@ namespace ProductApi.Infrastructure
                     OrderId = message.OrderId
                 };
                     
-                bus.PubSub.Publish(replyMessage);
+                _bus.PubSub.Publish(replyMessage);
+                Console.WriteLine("ProductListener PublishOrderAcceptedMessage");
             }
             else
             {
@@ -112,7 +123,8 @@ namespace ProductApi.Infrastructure
                 {
                     OrderId = message.OrderId
                 };
-                bus.PubSub.Publish(replyMessage);
+                _bus.PubSub.Publish(replyMessage);
+                Console.WriteLine("ProductListener PublishOrderRejectedMessage");
             }
         }
         
@@ -125,6 +137,7 @@ namespace ProductApi.Infrastructure
                 var result = product.Result;
                 if (orderLine.Quantity > result.ItemsInStock - result.ItemsReserved)
                 {
+                    Console.WriteLine("ProductListener Not enough products");
                     return false;
                 }
             }

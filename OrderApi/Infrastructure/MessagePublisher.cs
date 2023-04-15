@@ -21,14 +21,25 @@ namespace OrderApi.Infrastructure
 
         public void PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
-            Console.WriteLine("hej publisher");
-            OrderCreatedMessage message = new OrderCreatedMessage
+            Console.WriteLine("publisheorderCreateMessage topic: ");
+            var messageCustomer = new OrderCreatedMessage
             { 
                 CustomerId = customerId,
                 OrderId = orderId,
-                OrderLines = orderLines 
+                OrderLines = orderLines,
             };
-            bus.PubSub.Publish(message);
+            
+            var messageProduct = new OrderCreatedMessage
+            { 
+                CustomerId = customerId,
+                OrderId = orderId,
+                OrderLines = orderLines,
+            };
+            
+            bus.PubSub.Publish(messageCustomer, "checkCredit");
+            Console.WriteLine("OrderPublisher OrderCreatedMessage to customer after publish.");
+            bus.PubSub.Publish(messageProduct, "checkProductAvailability");
+            Console.WriteLine("OrderPublisher OrderCreatedMessage to product after publish.");
         }
 
         public void CreditStandingChangedMessage(int orderResultCustomerId)

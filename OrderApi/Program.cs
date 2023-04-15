@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // RabbitMQ connection string (I use CloudAMQP as a RabbitMQ server).
 // Remember to replace this connectionstring with your own.
 string cloudAMQPConnectionString =
-    "host=rabbitmq";
+    "";
 
 // Use this connection string if you want to run RabbitMQ server as a container
 // (see docker-compose.yml)
@@ -62,7 +62,7 @@ app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(
 
 Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
-//app.UseAuthorization();
+app.UseAuthorization();
 
 app.MapControllers();
 

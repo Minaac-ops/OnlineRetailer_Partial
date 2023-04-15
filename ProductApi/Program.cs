@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 string cloudAMQPConnectionString =
-    "host=rabbitmq";
+    "";
 // Add services to the container.
 
 builder.Services.AddDbContext<ProductApiContext>(opt => opt.UseInMemoryDatabase("ProductsDb"));
@@ -47,10 +48,13 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
+
+Console.WriteLine("MessageListener should start here");
 Task.Factory.StartNew(() =>
     new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
-//app.UseAuthorization();
+
+app.UseAuthorization();
 
 app.MapControllers();
 

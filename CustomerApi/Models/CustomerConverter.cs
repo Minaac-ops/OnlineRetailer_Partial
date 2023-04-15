@@ -14,6 +14,7 @@ namespace CustomerApi.Models
                 Email = sharedProduct.Email,
                 PhoneNo = sharedProduct.PhoneNo,
                 ShippingAddress = sharedProduct.ShippingAddress,
+                CreditStanding = sharedProduct.CreditStanding
             };
         }
 
@@ -27,6 +28,7 @@ namespace CustomerApi.Models
                 Email = hiddenProduct.Email,
                 PhoneNo = hiddenProduct.PhoneNo,
                 ShippingAddress = hiddenProduct.ShippingAddress,
+                CreditStanding = hiddenProduct.CreditStanding
             };
         }
     }

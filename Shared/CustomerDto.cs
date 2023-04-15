@@ -8,5 +8,6 @@ namespace Shared
         public int PhoneNo { get; set; }
         public string? BillingAddress { get; set; }
         public string? ShippingAddress { get; set; }
+        public bool CreditStanding { get; set; }
     }
 }

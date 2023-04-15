@@ -20,6 +20,7 @@ namespace OrderApi.Data
 
         Order IRepository<Order>.Add(Order entity)
         {
+            Console.WriteLine("OrderRepo: Before adds to db " + entity);
             if (entity == null)
             {
                 throw new Exception("An empty order can't be saved to the database.");
@@ -27,6 +28,7 @@ namespace OrderApi.Data
             entity.Date ??= DateTime.Now;
             
             var newOrder = db.Orders.Add(entity);
+            Console.WriteLine("OrderRepo: After adding to db "+ entity);
             db.SaveChanges();;
             return new Order
             {

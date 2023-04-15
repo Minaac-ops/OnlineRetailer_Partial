@@ -19,7 +19,9 @@ namespace CustomerApi.Data
         
         async Task<Customer> IRepository<Customer>.Get(int? id)
         {
-            return await db.Customers.FirstOrDefaultAsync(c => c.Id == id) ?? throw new InvalidOperationException();
+            var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
+            Console.WriteLine(customer.CreditStanding);
+            return customer;
         }
 
         async Task<IEnumerable<Customer>> IRepository<Customer>.GetAll()

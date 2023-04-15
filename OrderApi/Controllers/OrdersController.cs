@@ -16,11 +16,11 @@ namespace OrderApi.Controllers
     {
         private readonly IRepository<Order> repository;
         private IMessagePublisher _messagePublisher;
-        private IConverter<Order,OrderDto> _converter;
+        private IConverter<Order, OrderDto> _converter;
 
         public OrdersController(IRepository<Order> repos,
-                                IMessagePublisher publisher,
-                                IConverter<Order,OrderDto> orderConverter)
+            IMessagePublisher publisher,
+            IConverter<Order, OrderDto> orderConverter)
         {
             repository = repos;
             _messagePublisher = publisher;
@@ -48,7 +48,6 @@ namespace OrderApi.Controllers
             {
                 throw new Exception("Orders couldn't be displayed due to error " + e.Message);
             }
-            
         }
 
         [HttpGet("getByCustomer/{customerId}")]
@@ -85,13 +84,13 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
-                throw new Exception("Order with id "+id+" couldn't be displayed due to error "+e.Message);
+                throw new Exception("Order with id " + id + " couldn't be displayed due to error " + e.Message);
             }
         }
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody]OrderDto order)
+        public IActionResult Post([FromBody] OrderDto order)
         {
             //Checking if order is null
             if (order == null) throw new Exception("Fill out order details.");
@@ -100,25 +99,25 @@ namespace OrderApi.Controllers
             {
                 order.Status = OrderStatus.Tentative;
                 var newOrder = repository.Add(_converter.Convert(order));
-                
+
                 //publish orderstatuschanged
 
                 Console.WriteLine("before published");
                 _messagePublisher.PublishOrderCreatedMessage(newOrder.CustomerId, newOrder.Id, newOrder.OrderLines);
                 
-                Console.WriteLine("published");
-                
-                //wait until order status is "completed"
+                // Wait until order status is "completed"
                 bool isCompleted = false;
                 while (!isCompleted)
                 {
+                    Thread.Sleep(5000);
                     var tentativeOrder = repository.Get(newOrder.Id);
-                    if (tentativeOrder.Status == OrderStatus.Completed) isCompleted = true;
-                    Thread.Sleep(1000);
-                    
-                    Console.WriteLine("orderstatus changed");
+                    if (tentativeOrder.Status == OrderStatus.Completed)
+                    {
+                        isCompleted = true;
+                        Thread.Sleep(1000);
+                    }
                 }
-                return CreatedAtRoute("GetOrder", new { id = newOrder.Id }, newOrder);
+                return CreatedAtRoute("GetOrder", new {id = newOrder.Id}, newOrder);
             }
             catch (Exception e)
             {
@@ -140,7 +139,7 @@ namespace OrderApi.Controllers
                     Status = OrderStatus.Shipped
                 });
                 var order = repository.Get(id);
-                _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"shipped");
+                _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
                 return Ok();
             }
             catch (Exception e)
@@ -172,10 +171,11 @@ namespace OrderApi.Controllers
                 Console.WriteLine(e);
                 throw;
             }
+
             // Add code to implement this method.
             return Ok();
         }
-        
+
         // PUT orders/5/cancel
         // This action method cancels an order and publishes an OrderStatusChangedMessage
         // with topic set to "cancelled".
@@ -190,7 +190,7 @@ namespace OrderApi.Controllers
                     Status = OrderStatus.Cancelled
                 });
                 var order = repository.Get(id);
-                _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "cancelled");
                 return Ok();
             }
             catch (Exception e)
@@ -199,6 +199,5 @@ namespace OrderApi.Controllers
                 throw;
             }
         }
-
     }
 }
