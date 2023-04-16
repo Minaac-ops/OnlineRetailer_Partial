@@ -7,6 +7,5 @@ namespace Shared
     {
         public int OrderId { get; set; }
         public IList<OrderLine>? OrderLine { get; set; }
-        public string? Topic { get; set; }
     }
 }

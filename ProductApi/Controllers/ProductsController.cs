@@ -81,7 +81,7 @@ namespace ProductApi.Controllers
                     throw new Exception("Product or product id has to be filled out.");
                 }
 
-                await repository.Edit(id, _converter.Convert(productDto));
+                await repository.Edit(_converter.Convert(productDto));
             }
             catch (Exception e)
             {

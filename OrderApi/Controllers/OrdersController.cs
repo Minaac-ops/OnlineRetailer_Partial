@@ -136,12 +136,10 @@ namespace OrderApi.Controllers
         {
             try
             {
-                repository.Edit(new Order
-                {
-                    Id = id,
-                    Status = OrderDto.OrderStatus.Shipped
-                });
                 var order = repository.Get(id);
+                order.Status = OrderDto.OrderStatus.Shipped;
+                repository.Edit(order);
+                
                 _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
                 return Ok();
             }
@@ -184,13 +182,33 @@ namespace OrderApi.Controllers
         {
             try
             {
-                repository.Edit(new Order
-                {
-                    Id = id,
-                    Status = OrderDto.OrderStatus.Cancelled
-                });
                 var order = repository.Get(id);
-                _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "cancelled");
+                switch (order.Status)
+                {
+                    case OrderDto.OrderStatus.Shipped:
+                        throw new Exception("Can't cancel an order that has already been shipped. Call 911.");
+                        break;
+                    case OrderDto.OrderStatus.Cancelled:
+                        throw new Exception("Order already cancelled");
+                        break;
+                    case OrderDto.OrderStatus.Completed:
+                        order.Status = OrderDto.OrderStatus.Cancelled;
+                        repository.Edit(order);
+                        _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
+                        _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines,"cancelled");
+                        break;
+                    case OrderDto.OrderStatus.Paid:
+                        order.Status = OrderDto.OrderStatus.Cancelled;
+                        repository.Edit(order);
+                        _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                        break;
+                    case OrderDto.OrderStatus.Tentative:
+                        order.Status = OrderDto.OrderStatus.Cancelled;
+                        repository.Edit(order);
+                        _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                        break;
+                }
+                
                 return Ok();
             }
             catch (Exception e)

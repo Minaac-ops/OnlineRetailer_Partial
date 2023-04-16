@@ -23,16 +23,11 @@ namespace ProductApi.Data
             return newProduct.Entity;
         }
 
-        async Task IRepository<Product>.Edit(int id,Product entity)
+        async Task IRepository<Product>.Edit(Product entity)
         {
-            var productToModify = await db.Products.FindAsync(id);
-
-            if (productToModify == null) return;
+            if (entity == null) return;
             
-            productToModify.ItemsInStock-= entity.ItemsInStock;
-            productToModify.ItemsReserved = entity.ItemsReserved;
-            
-            db.Entry(productToModify).State = EntityState.Modified;
+            db.Entry(entity).State = EntityState.Modified;
             await db.SaveChangesAsync();
         }
 

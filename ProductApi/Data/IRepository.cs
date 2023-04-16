@@ -8,7 +8,7 @@ namespace ProductApi.Data
         Task<IEnumerable<T>> GetAll();
         Task<T> Get(int id);
         Task<T> Add(T entity);
-        Task Edit(int id,T entity);
+        Task Edit(T entity);
         void Remove(int id);
     }
 }

@@ -29,18 +29,16 @@ namespace ProductApi.Infrastructure
             Console.WriteLine("EnteredStart");
             using (_bus = RabbitHutch.CreateBus(connectionString))
             {
-                _bus.PubSub.Subscribe<CreditStandingChangedMessage>("orderDelievered", HandleOrderDelivered);
-                
-                Console.WriteLine("subscribing to orderdelivered");
                 _bus.PubSub.Subscribe<OrderCreatedMessage>
                 ("checkProducts", HandleProductCheck,x=>x.WithTopic("checkProductAvailability"));
-
                 Console.WriteLine("subscribing to newordercheck");
                 
                 _bus.PubSub.Subscribe<OrderStatusChangedMessage>("orderCancelled", HandleOrderCancelled,
                     x => x.WithTopic("cancelled"));
-                
                 Console.WriteLine("subscribing to ordercancelled");
+
+                _bus.PubSub.Subscribe<OrderStatusChangedMessage>("OrderShipped", HandleOrderShipped,
+                    x => x.WithTopic("shipped"));
                 
                 lock (this)
                 {
@@ -50,41 +48,37 @@ namespace ProductApi.Infrastructure
 
         }
 
+        private void HandleOrderShipped(OrderStatusChangedMessage obj)
+        {
+            using var scope = provider.CreateScope();
+            var services = scope.ServiceProvider;
+            var repo = services.GetService<IRepository<Product>>();
+
+            foreach (var orderLine in obj.OrderLine)
+            {
+                var p = repo.Get(orderLine.ProductId);
+                var pResult = p.Result;
+                pResult.ItemsReserved -= orderLine.Quantity;
+                repo.Edit(pResult);
+            }
+        }
+
         private void HandleOrderCancelled(OrderStatusChangedMessage obj)
         { 
             using var scope = provider.CreateScope();
             var services = scope.ServiceProvider;
             var repo = services.GetService<IRepository<Product>>();
 
-            if (ProductItemsAvailable(obj.OrderLine, repo))
-            {
-                foreach (var orderLine in obj.OrderLine)
-                {
-                    var p = repo.Get(orderLine.ProductId);
-                    var pResult = p.Result;
-                    pResult.ItemsReserved += orderLine.Quantity;
-                    repo.Edit(p.Id,pResult);
-                }
-
-                var replyMessage = new OrderStatusChangedMessage
-                {
-                    OrderId = obj.OrderId,
-                };
-            }
-
             foreach (var orderLine in obj.OrderLine)
             {
                 var product = repo.Get(orderLine.ProductId);
                 var result = product.Result;
                 result.ItemsReserved -= orderLine.Quantity;
-                repo.Edit(orderLine.ProductId, result);
+                result.ItemsInStock += orderLine.Quantity;
+                repo.Edit(result);
             }
         }
-
-        private void HandleOrderDelivered(CreditStandingChangedMessage obj)
-        {
-            
-        }
+        
         private void HandleProductCheck(OrderCreatedMessage message)
         {
             Console.WriteLine("ProductListener HandleProductCheck");
@@ -102,10 +96,12 @@ namespace ProductApi.Infrastructure
             {
                 foreach (var orderLine in message.OrderLines)
                 {
+                    Console.WriteLine(orderLine.Quantity);
                     var product = productRepos.Get(orderLine.ProductId);
                     var result = product.Result;
                     result.ItemsReserved += orderLine.Quantity;
-                    productRepos.Edit(orderLine.ProductId, result);
+                    result.ItemsInStock -= orderLine.Quantity;
+                    productRepos.Edit(result);
                 }
 
                 var replyMessage = new OrderAcceptedMessage
