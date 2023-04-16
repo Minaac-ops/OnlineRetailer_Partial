@@ -48,8 +48,8 @@ namespace OrderApi.Infrastructure
             //Delete order
             var order = orderRepo.Get(obj.OrderId);
 
-            order.Status = OrderStatus.Cancelled;
-            orderRepo.Edit(order.Id,order);
+            order.Status = OrderDto.OrderStatus.Cancelled;
+            orderRepo.Edit(order);
             Console.WriteLine("Handled OrderRejectedMessage");
         }
 
@@ -62,8 +62,12 @@ namespace OrderApi.Infrastructure
             
             //Mark order as completed
             var order = orderRepo.Get(obj.OrderId);
-            order.Status = OrderStatus.Completed;
-            orderRepo.Edit(order.Id, order);
+            Console.WriteLine("handleOrderAccepted orderstatus before edit "+order.Status + "orderid "+obj.OrderId);
+            order.Status = OrderDto.OrderStatus.Completed;
+            Console.WriteLine("handleOrderAccepted orderstaus after edit "+ order.Status);
+            orderRepo.Edit(order);
+            var newOrder = orderRepo.Get(obj.OrderId);
+            Console.WriteLine("after save: "+newOrder.Status);
             Console.WriteLine("HandleOrderAccepted");
         }
     }

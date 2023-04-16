@@ -8,7 +8,7 @@ namespace OrderApi.Data
         IEnumerable<T> GetAll();
         T Get(int id);
         T Add(T entity);
-        void Edit(int id,T entity);
+        void Edit(T entity);
         void Remove(int id);
         IEnumerable<T> GetByCustomerId(int customerId);
     }

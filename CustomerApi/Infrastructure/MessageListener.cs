@@ -75,12 +75,15 @@ namespace CustomerApi.Infrastructure
 
         private void HandleChangeCreditStanding(CreditStandingChangedMessage obj)
         {
-            Console.WriteLine("CustomerListener: Received ");
+            Console.WriteLine("CustomerListener: Received HandleChangedCreditStanding ");
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IRepository<Customer>>();
 
-            repo.ConfirmDelivered(obj.CustomerId);
+            var customer = repo.Get(obj.CustomerId);
+            var customerResult = customer.Result;
+            customerResult.CreditStanding = true;
+            repo.Edit(customer.Id,customerResult);
         }
     }
 }

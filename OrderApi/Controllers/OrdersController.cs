@@ -97,8 +97,10 @@ namespace OrderApi.Controllers
 
             try
             {
-                order.Status = OrderStatus.Tentative;
+                order.Status = OrderDto.OrderStatus.Tentative;
+                Console.WriteLine("OrderController before add should be tentative: "+order.Status.ToString());
                 var newOrder = repository.Add(_converter.Convert(order));
+                Console.WriteLine("OrderController after add should be tentative: "+order.Status.ToString());
 
                 //publish orderstatuschanged
 
@@ -111,13 +113,14 @@ namespace OrderApi.Controllers
                 {
                     Thread.Sleep(5000);
                     var tentativeOrder = repository.Get(newOrder.Id);
-                    if (tentativeOrder.Status == OrderStatus.Completed)
+                    if (tentativeOrder.Status == OrderDto.OrderStatus.Completed)
                     {
                         isCompleted = true;
                         Thread.Sleep(1000);
                     }
                 }
-                return CreatedAtRoute("GetOrder", new {id = newOrder.Id}, newOrder);
+                Console.WriteLine("right before return status should be "+ newOrder.Status);
+                return CreatedAtRoute("GetOrder", new {id = newOrder.Id}, _converter.Convert(newOrder));
             }
             catch (Exception e)
             {
@@ -133,10 +136,10 @@ namespace OrderApi.Controllers
         {
             try
             {
-                repository.Edit(id, new Order
+                repository.Edit(new Order
                 {
                     Id = id,
-                    Status = OrderStatus.Shipped
+                    Status = OrderDto.OrderStatus.Shipped
                 });
                 var order = repository.Get(id);
                 _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
@@ -158,12 +161,9 @@ namespace OrderApi.Controllers
             try
             {
                 var order = repository.Get(id);
-
-                repository.Edit(id, new Order()
-                {
-                    Id = id,
-                    Status = OrderStatus.Paid
-                });
+                order.Status = OrderDto.OrderStatus.Paid;
+                repository.Edit(order);
+                
                 _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
             }
             catch (Exception e)
@@ -184,10 +184,10 @@ namespace OrderApi.Controllers
         {
             try
             {
-                repository.Edit(id, new Order
+                repository.Edit(new Order
                 {
                     Id = id,
-                    Status = OrderStatus.Cancelled
+                    Status = OrderDto.OrderStatus.Cancelled
                 });
                 var order = repository.Get(id);
                 _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "cancelled");

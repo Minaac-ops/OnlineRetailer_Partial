@@ -13,7 +13,7 @@ namespace OrderApi.Models
                 CustomerId = sharedProduct.CustomerId,
                 Date = sharedProduct.Date,
                 OrderLines = sharedProduct.OrderLines,
-                Status = sharedProduct.Status,
+                Status = sharedProduct.Status
             };
         }
 
@@ -25,7 +25,7 @@ namespace OrderApi.Models
                 CustomerId = hiddenProduct.CustomerId,
                 Date = hiddenProduct.Date,
                 OrderLines = hiddenProduct.OrderLines,
-                Status = hiddenProduct.Status,
+                Status = hiddenProduct.Status
             };
         }
     }

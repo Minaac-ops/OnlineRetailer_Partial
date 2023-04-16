@@ -48,7 +48,7 @@ namespace OrderApi.Infrastructure
             {
                 CustomerId = orderResultCustomerId
             };
-            bus.PubSub.Publish(message);
+            bus.PubSub.Publish(message, "paid");
         }
 
         public void OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)

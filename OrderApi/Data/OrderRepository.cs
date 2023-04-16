@@ -40,18 +40,16 @@ namespace OrderApi.Data
             };
         }
 
-        async void IRepository<Order>.Edit(int id,Order entity)
+        void IRepository<Order>.Edit(Order entity)
         {
-            var orderToUpdate = await db.Orders.FindAsync(id);
-
-            if (orderToUpdate == null)
+            if (entity == null)
             {
-                throw new Exception("Couldn't find customer with id " + id+" to update.");
+                throw new Exception("Couldn't find customer with id "+entity.Id+" to update.");
             }
-            orderToUpdate.Status = entity.Status;
+            Console.WriteLine(entity.Status);
             
-            db.Entry(orderToUpdate).State = EntityState.Modified;
-            await db.SaveChangesAsync();
+            db.Entry(entity).State = EntityState.Modified;
+            db.SaveChanges();
         }
 
         Order IRepository<Order>.Get(int id)
@@ -82,6 +80,7 @@ namespace OrderApi.Data
                 Id = order.Id,
                 Date = order.Date,
                 CustomerId = order.CustomerId,
+                Status = order.Status,
                 OrderLines = order.OrderLines.Select(ol => new OrderLine()
                 {
                     Id = ol.Id,
