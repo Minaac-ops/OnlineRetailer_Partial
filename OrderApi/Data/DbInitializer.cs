@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Threading.Tasks;
 using OrderApi.Models;
 using Shared;
 
@@ -9,7 +10,7 @@ namespace OrderApi.Data
     public class DbInitializer : IDbInitializer
     {
         // This method will create and seed the database.
-        public async void Initialize(OrderApiContext context)
+        public async Task Initialize(OrderApiContext context)
         {
             await context.Database.EnsureDeletedAsync();
             await context.Database.EnsureCreatedAsync();

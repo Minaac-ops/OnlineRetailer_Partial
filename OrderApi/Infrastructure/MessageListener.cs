@@ -12,7 +12,7 @@ namespace OrderApi.Infrastructure
     {
         IServiceProvider _provider;
         string connectionString;
-        IBus bus;
+        IBus _bus;
 
         public MessageListener(IServiceProvider provider, string connectionString)
         {
@@ -22,12 +22,12 @@ namespace OrderApi.Infrastructure
 
         public async void Start()
         {
-            using (bus = RabbitHutch.CreateBus(connectionString))
+            using (_bus = RabbitHutch.CreateBus(connectionString))
             {
-                await bus.PubSub.SubscribeAsync<OrderAcceptedMessage>("orderAcceptedMessage", HandleOrderAccepted);
+                await _bus.PubSub.SubscribeAsync<OrderAcceptedMessage>("orderAcceptedMessage", HandleOrderAccepted);
                 Console.WriteLine("Subscribing to OrderAcceptedMessage");
 
-                await bus.PubSub.SubscribeAsync<OrderRejectedMessage>("orderRejectedMessage", HandleOrderRejected);
+                await _bus.PubSub.SubscribeAsync<OrderRejectedMessage>("orderRejectedMessage", HandleOrderRejected);
                 Console.WriteLine("Subscribing to OrderRejectedMessage");
                 
                 //block thread so it doesnt stop sub
@@ -49,7 +49,7 @@ namespace OrderApi.Infrastructure
             var order = await orderRepo.Get(obj.OrderId);
 
             order.Status = OrderDto.OrderStatus.Cancelled;
-            orderRepo.Edit(order);
+            await orderRepo.Edit(order);
             Console.WriteLine("Handled OrderRejectedMessage");
         }
 
@@ -65,7 +65,7 @@ namespace OrderApi.Infrastructure
             Console.WriteLine("handleOrderAccepted orderstatus before edit "+order.Status + "orderid "+obj.OrderId);
             order.Status = OrderDto.OrderStatus.Completed;
             Console.WriteLine("handleOrderAccepted orderstaus after edit "+ order.Status);
-            orderRepo.Edit(order);
+            await orderRepo.Edit(order);
             var newOrder = await orderRepo.Get(obj.OrderId);
             Console.WriteLine("after save: "+newOrder.Status);
             Console.WriteLine("HandleOrderAccepted");

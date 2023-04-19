@@ -1,7 +1,9 @@
-﻿namespace ProductApi.Data
+﻿using System.Threading.Tasks;
+
+namespace ProductApi.Data
 {
     public interface IDbInitializer
     {
-        void Initialize(ProductApiContext context);
+        Task Initialize(ProductApiContext context);
     }
 }

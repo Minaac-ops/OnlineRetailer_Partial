@@ -91,15 +91,14 @@ namespace ProductApi.Controllers
 
         // DELETE products/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task Delete(int id)
         {
-            if (_repository.Get(id) == null)
+            if (await _repository.Get(id) == null)
             {
-                return NotFound();
+                return;
             }
 
-            _repository.Remove(id);
-            return new NoContentResult();
+            await _repository.Remove(id);
         }
     }
 }

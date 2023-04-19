@@ -10,7 +10,6 @@ namespace CustomerApi.Data
         Task<T> Get(int? id);
         Task<T> Add(T entity);
         Task<T> Edit(int id, T entity);
-        void Remove(int id);
-        void ConfirmDelivered(int objCustomerId);
+        Task Remove(int id);
     }
 }

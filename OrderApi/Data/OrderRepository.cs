@@ -40,7 +40,7 @@ namespace OrderApi.Data
             };
         }
 
-        async void IRepository<Order>.Edit(Order entity)
+        async Task IRepository<Order>.Edit(Order entity)
         {
             if (entity == null)
             {
@@ -92,7 +92,7 @@ namespace OrderApi.Data
             return await select.ToListAsync();
         }
 
-        async void IRepository<Order>.Remove(int id)
+        async Task IRepository<Order>.Remove(int id)
         {
             var order = await db.Orders.FirstOrDefaultAsync(p => p.Id == id);
             db.Orders.Remove(order);

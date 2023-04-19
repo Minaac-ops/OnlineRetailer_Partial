@@ -8,8 +8,8 @@ namespace OrderApi.Data
         Task<IEnumerable<T>> GetAll();
         Task<T> Get(int id);
         Task<T> Add(T entity);
-        void Edit(T entity);
-        void Remove(int id);
+        Task Edit(T entity);
+        Task Remove(int id);
         Task<IEnumerable<T>> GetByCustomerId(int customerId);
     }
 }

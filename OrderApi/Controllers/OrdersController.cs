@@ -133,7 +133,7 @@ namespace OrderApi.Controllers
         // This action method ships an order and publishes an OrderStatusChangedMessage.
         // with topic set to "shipped".
         [HttpPut("{id}/ship")]
-        public async void Ship(int id)
+        public async Task Ship(int id)
         {
             try
             {
@@ -154,13 +154,13 @@ namespace OrderApi.Controllers
         // This action method marks an order as paid and publishes a CreditStandingChangedMessage
         // (which have not yet been implemented), if the credit standing changes.
         [HttpPut("{id}/pay")]
-        public async void Pay(int id)
+        public async Task Pay(int id)
         {
             try
             {
                 var order = await repository.Get(id);
                 order.Status = OrderDto.OrderStatus.Paid;
-                repository.Edit(order);
+                await repository.Edit(order);
                 
                 _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
             }
@@ -177,7 +177,7 @@ namespace OrderApi.Controllers
         // This action method cancels an order and publishes an OrderStatusChangedMessage
         // with topic set to "cancelled".
         [HttpPut("{id}/cancel")]
-        public async void Cancel(int id)
+        public async Task Cancel(int id)
         {
             try
             {
@@ -192,18 +192,18 @@ namespace OrderApi.Controllers
                         break;
                     case OrderDto.OrderStatus.Completed:
                         order.Status = OrderDto.OrderStatus.Cancelled;
-                        repository.Edit(order);
+                        await repository.Edit(order);
                         _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
                         _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines,"cancelled");
                         break;
                     case OrderDto.OrderStatus.Paid:
                         order.Status = OrderDto.OrderStatus.Cancelled;
-                        repository.Edit(order);
+                        await repository.Edit(order);
                         _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
                         break;
                     case OrderDto.OrderStatus.Tentative:
                         order.Status = OrderDto.OrderStatus.Cancelled;
-                        repository.Edit(order);
+                        await repository.Edit(order);
                         _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
                         break;
                 }

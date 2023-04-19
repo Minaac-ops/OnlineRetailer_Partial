@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CustomerApi.Models;
 using Shared;
 
@@ -8,7 +9,7 @@ namespace CustomerApi.Data
 {
     public class DbInitializer : IDbInitializer
     {
-        public async void Initialize(CustomerApiContext context)
+        public async Task Initialize(CustomerApiContext context)
         {
             await context.Database.EnsureDeletedAsync();
             await context.Database.EnsureCreatedAsync();

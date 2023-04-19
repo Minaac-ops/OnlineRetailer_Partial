@@ -1,7 +1,9 @@
-﻿namespace OrderApi.Data
+﻿using System.Threading.Tasks;
+
+namespace OrderApi.Data
 {
     public interface IDbInitializer
     {
-        void Initialize(OrderApiContext context);
+        Task Initialize(OrderApiContext context);
     }
 }

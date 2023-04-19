@@ -67,19 +67,9 @@ namespace CustomerApi.Data
             return customerToUpdate;
         }
 
-        public void Remove(int id)
+        public async Task Remove(int id)
         {
             throw new System.NotImplementedException();
-        }
-
-        public async void ConfirmDelivered(int objCustomerId)
-        {
-            var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == objCustomerId);
-
-            customer.CreditStanding = true;
-
-            db.Customers.Entry(customer).State = EntityState.Modified;
-            await db.SaveChangesAsync();
         }
     }
 }

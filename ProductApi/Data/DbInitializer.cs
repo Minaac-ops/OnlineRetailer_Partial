@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ProductApi.Models;
 using Shared;
 
@@ -8,7 +9,7 @@ namespace ProductApi.Data
     public class DbInitializer : IDbInitializer
     {
         // This method will create and seed the database.
-        public async void Initialize(ProductApiContext context)
+        public async Task Initialize(ProductApiContext context)
         {
             await context.Database.EnsureCreatedAsync();
             await context.Database.EnsureCreatedAsync();
