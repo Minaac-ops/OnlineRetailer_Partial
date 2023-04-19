@@ -26,11 +26,11 @@ namespace CustomerApi.Infrastructure
         {
             using (bus = RabbitHutch.CreateBus(connectionString))
             {
-                bus.PubSub.Subscribe<CreditStandingChangedMessage>
+                bus.PubSub.SubscribeAsync<CreditStandingChangedMessage>
                     ("creditChanged",HandleChangeCreditStanding,x => x.WithTopic("paid"));
                 Console.WriteLine("CustomerListener: Listening to CreditStandingChangedMessage");
                 
-                bus.PubSub.Subscribe<OrderCreatedMessage>
+                bus.PubSub.SubscribeAsync<OrderCreatedMessage>
                     ("checkCreditStanding", HandleCheckCreditStanding,x => x.WithTopic("checkCredit"));
                 Console.WriteLine("CustomerListener: Listening to OrderCreatedMessage");
                 
@@ -41,23 +41,23 @@ namespace CustomerApi.Infrastructure
             }
         }
 
-        private void HandleCheckCreditStanding(OrderCreatedMessage obj)
+        private async void HandleCheckCreditStanding(OrderCreatedMessage obj)
         {
             Console.WriteLine("CustomerListener: Received OrderCreatedMessage");
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IRepository<Customer>>();
             
-            var customer = repo?.Get(obj.CustomerId).Result;
+            var customer = await repo?.Get(obj.CustomerId);
             Console.WriteLine("Customer CreditStanding: "+customer.CreditStanding);
             if (customer.CreditStanding)
             {
-                repo?.Edit(customer.Id, customer);
+                await repo?.Edit(customer.Id, customer);
                 var orderAcceptedMessage = new OrderAcceptedMessage
                 {
                     OrderId = obj.OrderId
                 };
-                bus.PubSub.Publish(orderAcceptedMessage);
+                await bus.PubSub.PublishAsync(orderAcceptedMessage);
                 Console.WriteLine("CustomerListener: PublishedOrderAccepted");
             } else
             {
@@ -65,25 +65,24 @@ namespace CustomerApi.Infrastructure
                 {
                     OrderId = obj.OrderId
                 };
-                bus.PubSub.Publish(orderRejectedMessage);
+                await bus.PubSub.PublishAsync(orderRejectedMessage);
                 Console.WriteLine("CustomerListener: PublishedOrderRejected");
             }
  
-            customer!.CreditStanding = false;
-            repo?.Edit(customer.Id,customer);
+            customer.CreditStanding = false;
+            await repo.Edit(customer.Id,customer);
         }
 
-        private void HandleChangeCreditStanding(CreditStandingChangedMessage obj)
+        private async void HandleChangeCreditStanding(CreditStandingChangedMessage obj)
         {
             Console.WriteLine("CustomerListener: Received HandleChangedCreditStanding ");
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IRepository<Customer>>();
 
-            var customer = repo.Get(obj.CustomerId);
-            var customerResult = customer.Result;
-            customerResult.CreditStanding = true;
-            repo.Edit(customer.Id,customerResult);
+            var customer = await repo.Get(obj.CustomerId);
+            customer.CreditStanding = true;
+            await repo.Edit(customer.Id, customer);
         }
     }
 }

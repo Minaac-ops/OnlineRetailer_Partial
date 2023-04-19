@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
@@ -29,11 +30,11 @@ namespace OrderApi.Controllers
 
         // GET: orders
         [HttpGet]
-        public IEnumerable<OrderDto> Get()
+        public async Task<IEnumerable<OrderDto>> Get()
         {
             try
             {
-                var orders = repository.GetAll();
+                var orders = await repository.GetAll();
                 var dtos = orders.Select(o => new OrderDto
                 {
                     Id = o.Id,
@@ -51,11 +52,11 @@ namespace OrderApi.Controllers
         }
 
         [HttpGet("getByCustomer/{customerId}")]
-        public IEnumerable<OrderDto> GetByCustomerId(int customerId)
+        public async Task<IEnumerable<OrderDto>> GetByCustomerId(int customerId)
         {
             try
             {
-                var items = repository.GetByCustomerId(customerId);
+                var items = await repository.GetByCustomerId(customerId);
                 var dtos = items.Select(o => new OrderDto()
                 {
                     Id = o.Id,
@@ -75,12 +76,12 @@ namespace OrderApi.Controllers
 
         // GET orders/5
         [HttpGet("{id}", Name = "GetOrder")]
-        public IActionResult Get(int id)
+        public async Task<OrderDto> Get(int id)
         {
             try
             {
-                var item = repository.Get(id);
-                return new ObjectResult(item);
+                var item = await repository.Get(id);
+                return _converter.Convert(item);
             }
             catch (Exception e)
             {
@@ -90,7 +91,7 @@ namespace OrderApi.Controllers
 
         // POST orders
         [HttpPost]
-        public IActionResult Post([FromBody] OrderDto order)
+        public async Task<OrderDto> Post([FromBody] OrderDto order)
         {
             //Checking if order is null
             if (order == null) throw new Exception("Fill out order details.");
@@ -99,7 +100,7 @@ namespace OrderApi.Controllers
             {
                 order.Status = OrderDto.OrderStatus.Tentative;
                 Console.WriteLine("OrderController before add should be tentative: "+order.Status.ToString());
-                var newOrder = repository.Add(_converter.Convert(order));
+                var newOrder = await repository.Add(_converter.Convert(order));
                 Console.WriteLine("OrderController after add should be tentative: "+order.Status.ToString());
 
                 //publish orderstatuschanged
@@ -112,7 +113,7 @@ namespace OrderApi.Controllers
                 while (!isCompleted)
                 {
                     Thread.Sleep(5000);
-                    var tentativeOrder = repository.Get(newOrder.Id);
+                    var tentativeOrder = await repository.Get(newOrder.Id);
                     if (tentativeOrder.Status == OrderDto.OrderStatus.Completed)
                     {
                         isCompleted = true;
@@ -120,7 +121,7 @@ namespace OrderApi.Controllers
                     }
                 }
                 Console.WriteLine("right before return status should be "+ newOrder.Status);
-                return CreatedAtRoute("GetOrder", new {id = newOrder.Id}, _converter.Convert(newOrder));
+                return _converter.Convert(newOrder);
             }
             catch (Exception e)
             {
@@ -132,16 +133,15 @@ namespace OrderApi.Controllers
         // This action method ships an order and publishes an OrderStatusChangedMessage.
         // with topic set to "shipped".
         [HttpPut("{id}/ship")]
-        public IActionResult Ship(int id)
+        public async void Ship(int id)
         {
             try
             {
-                var order = repository.Get(id);
+                var order = await repository.Get(id);
                 order.Status = OrderDto.OrderStatus.Shipped;
                 repository.Edit(order);
                 
                 _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
-                return Ok();
             }
             catch (Exception e)
             {
@@ -154,11 +154,11 @@ namespace OrderApi.Controllers
         // This action method marks an order as paid and publishes a CreditStandingChangedMessage
         // (which have not yet been implemented), if the credit standing changes.
         [HttpPut("{id}/pay")]
-        public IActionResult Pay(int id)
+        public async void Pay(int id)
         {
             try
             {
-                var order = repository.Get(id);
+                var order = await repository.Get(id);
                 order.Status = OrderDto.OrderStatus.Paid;
                 repository.Edit(order);
                 
@@ -171,18 +171,17 @@ namespace OrderApi.Controllers
             }
 
             // Add code to implement this method.
-            return Ok();
         }
 
         // PUT orders/5/cancel
         // This action method cancels an order and publishes an OrderStatusChangedMessage
         // with topic set to "cancelled".
         [HttpPut("{id}/cancel")]
-        public IActionResult Cancel(int id)
+        public async void Cancel(int id)
         {
             try
             {
-                var order = repository.Get(id);
+                var order = await repository.Get(id);
                 switch (order.Status)
                 {
                     case OrderDto.OrderStatus.Shipped:
@@ -208,8 +207,6 @@ namespace OrderApi.Controllers
                         _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
                         break;
                 }
-                
-                return Ok();
             }
             catch (Exception e)
             {

@@ -9,6 +9,6 @@ namespace ProductApi.Data
         Task<T> Get(int id);
         Task<T> Add(T entity);
         Task Edit(T entity);
-        void Remove(int id);
+        Task Remove(int id);
     }
 }

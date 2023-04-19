@@ -72,15 +72,14 @@ namespace CustomerApi.Data
             throw new System.NotImplementedException();
         }
 
-        public void ConfirmDelivered(int objCustomerId)
+        public async void ConfirmDelivered(int objCustomerId)
         {
-            var customer = db.Customers.FirstOrDefaultAsync(c => c.Id == objCustomerId);
-            var result = customer.Result;
+            var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == objCustomerId);
 
-            result.CreditStanding = true;
+            customer.CreditStanding = true;
 
-            db.Customers.Entry(result).State = EntityState.Modified;
-            db.SaveChangesAsync();
+            db.Customers.Entry(customer).State = EntityState.Modified;
+            await db.SaveChangesAsync();
         }
     }
 }

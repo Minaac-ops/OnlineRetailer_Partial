@@ -13,13 +13,13 @@ namespace ProductApi.Controllers
     [Route("[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly IRepository<Product> repository;
+        private readonly IRepository<Product> _repository;
         private IConverter<Product, ProductDto> _converter;
 
         public ProductsController(IRepository<Product> repos, IConverter<Product, ProductDto> converter)
         {
             _converter = converter;
-            repository = repos;
+            _repository = repos;
         }
 
         // GET products
@@ -28,7 +28,7 @@ namespace ProductApi.Controllers
         {
             try
             {
-                var products = await repository.GetAll();
+                var products = await _repository.GetAll();
                 return products.Select(p => _converter.Convert(p));
             }
             catch (Exception e)
@@ -43,7 +43,7 @@ namespace ProductApi.Controllers
         {
             try
             {
-                var item = await repository.Get(id);
+                var item = await _repository.Get(id);
                 return _converter.Convert(item);
             }
             catch (Exception e)
@@ -60,7 +60,7 @@ namespace ProductApi.Controllers
             {
                 if (productDto == null) throw new Exception("Fill out product details.");
 
-                var newProduct = await repository.Add(_converter.Convert(productDto));
+                var newProduct = await _repository.Add(_converter.Convert(productDto));
 
                 return _converter.Convert(newProduct);
             }
@@ -81,7 +81,7 @@ namespace ProductApi.Controllers
                     throw new Exception("Product or product id has to be filled out.");
                 }
 
-                await repository.Edit(_converter.Convert(productDto));
+                await _repository.Edit(_converter.Convert(productDto));
             }
             catch (Exception e)
             {
@@ -93,12 +93,12 @@ namespace ProductApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            if (repository.Get(id) == null)
+            if (_repository.Get(id) == null)
             {
                 return NotFound();
             }
 
-            repository.Remove(id);
+            _repository.Remove(id);
             return new NoContentResult();
         }
     }

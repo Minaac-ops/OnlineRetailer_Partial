@@ -41,11 +41,11 @@ namespace ProductApi.Data
             return await db.Products.ToListAsync();
         }
 
-        void IRepository<Product>.Remove(int id)
+        async Task IRepository<Product>.Remove(int id)
         {
-            var product = db.Products.FirstOrDefault(p => p.Id == id);
+            var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id);
             db.Products.Remove(product);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
         }
     }
 }

@@ -8,10 +8,10 @@ namespace CustomerApi.Data
 {
     public class DbInitializer : IDbInitializer
     {
-        public void Initialize(CustomerApiContext context)
+        public async void Initialize(CustomerApiContext context)
         {
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
 
             // Look for any Products
             if (context.Customers.Any())
@@ -24,8 +24,8 @@ namespace CustomerApi.Data
                 new Customer {CompanyName = "Normal",BillingAddress = "Torvet 4,6700 Esbjerg", Email = "normal@email.com", PhoneNo = 12345678, ShippingAddress = "Torvet 4, 6700 Esbjerg",CreditStanding = true}
             };
 
-            context.Customers.AddRange(orders);
-            context.SaveChanges();
+            await context.Customers.AddRangeAsync(orders);
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -5,11 +5,11 @@ namespace OrderApi.Data
 {
     public interface IRepository<T>
     {
-        IEnumerable<T> GetAll();
-        T Get(int id);
-        T Add(T entity);
+        Task<IEnumerable<T>> GetAll();
+        Task<T> Get(int id);
+        Task<T> Add(T entity);
         void Edit(T entity);
         void Remove(int id);
-        IEnumerable<T> GetByCustomerId(int customerId);
+        Task<IEnumerable<T>> GetByCustomerId(int customerId);
     }
 }

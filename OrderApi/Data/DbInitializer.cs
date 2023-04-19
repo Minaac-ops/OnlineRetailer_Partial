@@ -9,10 +9,10 @@ namespace OrderApi.Data
     public class DbInitializer : IDbInitializer
     {
         // This method will create and seed the database.
-        public void Initialize(OrderApiContext context)
+        public async void Initialize(OrderApiContext context)
         {
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
 
             // Look for any Products
             if (context.Orders.Any())
@@ -31,9 +31,9 @@ namespace OrderApi.Data
                 new Order { Date = DateTime.Today, OrderLines = orderLines,Status = OrderDto.OrderStatus.Completed}
             };
 
-            context.Orders.AddRange(orders);
-            context.OrderLines.AddRange(orderLines);
-            context.SaveChanges();
+            await context.Orders.AddRangeAsync(orders);
+            await context.OrderLines.AddRangeAsync(orderLines);
+            await context.SaveChangesAsync();
         }
     }
 }

@@ -19,7 +19,7 @@ namespace OrderApi.Infrastructure
             bus.Dispose();
         }
 
-        public void PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
+        public async void PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
             Console.WriteLine("publisheorderCreateMessage topic: ");
             var messageCustomer = new OrderCreatedMessage
@@ -36,29 +36,29 @@ namespace OrderApi.Infrastructure
                 OrderLines = orderLines,
             };
             
-            bus.PubSub.Publish(messageCustomer, "checkCredit");
+            await bus.PubSub.PublishAsync(messageCustomer, "checkCredit");
             Console.WriteLine("OrderPublisher OrderCreatedMessage to customer after publish.");
-            bus.PubSub.Publish(messageProduct, "checkProductAvailability");
+            await bus.PubSub.PublishAsync(messageProduct, "checkProductAvailability");
             Console.WriteLine("OrderPublisher OrderCreatedMessage to product after publish.");
         }
 
-        public void CreditStandingChangedMessage(int orderResultCustomerId)
+        public async void CreditStandingChangedMessage(int orderResultCustomerId)
         {
             var message = new CreditStandingChangedMessage
             {
                 CustomerId = orderResultCustomerId
             };
-            bus.PubSub.Publish(message, "paid");
+            await bus.PubSub.PublishAsync(message, "paid");
         }
 
-        public void OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
+        public async void OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
         {
             var message = new OrderStatusChangedMessage
             {
                 OrderId = id,
                 OrderLine = orderLines
             };
-            bus.PubSub.Publish(message, $"{topic}");
+            await bus.PubSub.PublishAsync(message, $"{topic}");
         }
     }
 }

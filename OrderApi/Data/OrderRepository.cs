@@ -18,7 +18,7 @@ namespace OrderApi.Data
             db = context;
         }
 
-        Order IRepository<Order>.Add(Order entity)
+        async Task<Order> IRepository<Order>.Add(Order entity)
         {
             Console.WriteLine("OrderRepo: Before adds to db " + entity);
             if (entity == null)
@@ -27,9 +27,9 @@ namespace OrderApi.Data
             }
             entity.Date ??= DateTime.Now;
             
-            var newOrder = db.Orders.Add(entity);
+            var newOrder = await db.Orders.AddAsync(entity);
             Console.WriteLine("OrderRepo: After adding to db "+ entity);
-            db.SaveChanges();;
+            await db.SaveChangesAsync();;
             return new Order
             {
                 CustomerId = newOrder.Entity.CustomerId,
@@ -40,7 +40,7 @@ namespace OrderApi.Data
             };
         }
 
-        void IRepository<Order>.Edit(Order entity)
+        async void IRepository<Order>.Edit(Order entity)
         {
             if (entity == null)
             {
@@ -49,10 +49,10 @@ namespace OrderApi.Data
             Console.WriteLine(entity.Status);
             
             db.Entry(entity).State = EntityState.Modified;
-            db.SaveChanges();
+            await db.SaveChangesAsync();
         }
 
-        Order IRepository<Order>.Get(int id)
+        async Task<Order> IRepository<Order>.Get(int id)
         {
             var entity = db.Orders
                 .Where(o => o.Id == id)
@@ -70,10 +70,10 @@ namespace OrderApi.Data
                         Quantity = ol.Quantity
                     }).ToList(),
                 }).FirstOrDefaultAsync();
-            return entity.Result;
+            return await entity;
         }
 
-        IEnumerable<Order> IRepository<Order>.GetAll()
+        async Task<IEnumerable<Order>> IRepository<Order>.GetAll()
         {
             var select = db.Orders.Select(order => new Order()
             {
@@ -89,17 +89,17 @@ namespace OrderApi.Data
                     OrderId = ol.OrderId,
                 }).ToList(),
             });
-            return select.ToListAsync().Result;
+            return await select.ToListAsync();
         }
 
-        void IRepository<Order>.Remove(int id)
+        async void IRepository<Order>.Remove(int id)
         {
-            var order = db.Orders.FirstOrDefaultAsync(p => p.Id == id);
-            db.Orders.Remove(order.Result);
-            db.SaveChangesAsync();
+            var order = await db.Orders.FirstOrDefaultAsync(p => p.Id == id);
+            db.Orders.Remove(order);
+            await db.SaveChangesAsync();
         }
 
-        IEnumerable<Order> IRepository<Order>.GetByCustomerId(int customerId)
+        async Task<IEnumerable<Order>> IRepository<Order>.GetByCustomerId(int customerId)
         {
             var entities = db.Orders
                 .Where(o => o.CustomerId == customerId)
@@ -117,7 +117,7 @@ namespace OrderApi.Data
                         Quantity = ol.Quantity
                     }).ToList(),
                 }).ToListAsync();
-            return entities.Result;
+            return await entities;
         }
     }
 }

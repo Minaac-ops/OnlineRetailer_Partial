@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using EasyNetQ;
 using Microsoft.Extensions.DependencyInjection;
 using ProductApi.Data;
@@ -24,20 +25,20 @@ namespace ProductApi.Infrastructure
             this.connectionString = connectionString;
         }
 
-        public void Start()
+        public async void Start()
         {
             Console.WriteLine("EnteredStart");
             using (_bus = RabbitHutch.CreateBus(connectionString))
             {
-                _bus.PubSub.Subscribe<OrderCreatedMessage>
+                await _bus.PubSub.SubscribeAsync<OrderCreatedMessage>
                 ("checkProducts", HandleProductCheck,x=>x.WithTopic("checkProductAvailability"));
                 Console.WriteLine("subscribing to newordercheck");
                 
-                _bus.PubSub.Subscribe<OrderStatusChangedMessage>("orderCancelled", HandleOrderCancelled,
+                await _bus.PubSub.SubscribeAsync<OrderStatusChangedMessage>("orderCancelled", HandleOrderCancelled,
                     x => x.WithTopic("cancelled"));
                 Console.WriteLine("subscribing to ordercancelled");
 
-                _bus.PubSub.Subscribe<OrderStatusChangedMessage>("OrderShipped", HandleOrderShipped,
+                await _bus.PubSub.SubscribeAsync<OrderStatusChangedMessage>("OrderShipped", HandleOrderShipped,
                     x => x.WithTopic("shipped"));
                 
                 lock (this)
@@ -48,7 +49,7 @@ namespace ProductApi.Infrastructure
 
         }
 
-        private void HandleOrderShipped(OrderStatusChangedMessage obj)
+        private async void HandleOrderShipped(OrderStatusChangedMessage obj)
         {
             using var scope = provider.CreateScope();
             var services = scope.ServiceProvider;
@@ -56,14 +57,13 @@ namespace ProductApi.Infrastructure
 
             foreach (var orderLine in obj.OrderLine)
             {
-                var p = repo.Get(orderLine.ProductId);
-                var pResult = p.Result;
-                pResult.ItemsReserved -= orderLine.Quantity;
-                repo.Edit(pResult);
+                var p = await repo.Get(orderLine.ProductId);
+                p.ItemsReserved -= orderLine.Quantity;
+                await repo.Edit(p);
             }
         }
 
-        private void HandleOrderCancelled(OrderStatusChangedMessage obj)
+        private async void HandleOrderCancelled(OrderStatusChangedMessage obj)
         { 
             using var scope = provider.CreateScope();
             var services = scope.ServiceProvider;
@@ -71,15 +71,14 @@ namespace ProductApi.Infrastructure
 
             foreach (var orderLine in obj.OrderLine)
             {
-                var product = repo.Get(orderLine.ProductId);
-                var result = product.Result;
-                result.ItemsReserved -= orderLine.Quantity;
-                result.ItemsInStock += orderLine.Quantity;
-                repo.Edit(result);
+                var product = await repo.Get(orderLine.ProductId);
+                product.ItemsReserved -= orderLine.Quantity;
+                product.ItemsInStock += orderLine.Quantity;
+                await repo.Edit(product);
             }
         }
         
-        private void HandleProductCheck(OrderCreatedMessage message)
+        private async void HandleProductCheck(OrderCreatedMessage message)
         {
             Console.WriteLine("ProductListener HandleProductCheck");
             // A service scope is created to get an instance of the product repository.
@@ -97,11 +96,10 @@ namespace ProductApi.Infrastructure
                 foreach (var orderLine in message.OrderLines)
                 {
                     Console.WriteLine(orderLine.Quantity);
-                    var product = productRepos.Get(orderLine.ProductId);
-                    var result = product.Result;
-                    result.ItemsReserved += orderLine.Quantity;
-                    result.ItemsInStock -= orderLine.Quantity;
-                    productRepos.Edit(result);
+                    var product =await productRepos.Get(orderLine.ProductId);
+                    product.ItemsReserved += orderLine.Quantity;
+                    product.ItemsInStock -= orderLine.Quantity;
+                    await productRepos.Edit(product);
                 }
 
                 var replyMessage = new OrderAcceptedMessage
@@ -109,7 +107,7 @@ namespace ProductApi.Infrastructure
                     OrderId = message.OrderId
                 };
                     
-                _bus.PubSub.Publish(replyMessage);
+                await _bus.PubSub.PublishAsync(replyMessage);
                 Console.WriteLine("ProductListener PublishOrderAcceptedMessage");
             }
             else
@@ -119,7 +117,7 @@ namespace ProductApi.Infrastructure
                 {
                     OrderId = message.OrderId
                 };
-                _bus.PubSub.Publish(replyMessage);
+                await _bus.PubSub.PublishAsync(replyMessage);
                 Console.WriteLine("ProductListener PublishOrderRejectedMessage");
             }
         }
