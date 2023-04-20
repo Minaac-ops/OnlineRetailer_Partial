@@ -1,25 +1,37 @@
 using System;
 using System.Threading.Tasks;
 using EmailService.Models;
+using FeatureHubSDK;
 using MailKit.Net.Smtp;
 using MimeKit;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 
 namespace EmailService.Infrastructure
 {
-    public class EmailEmailSender : IEmailSender
+    public class EmailSender : IEmailSender
     {
         private readonly EmailConfig _emailConfig;
-
-        public EmailEmailSender(EmailConfig emailConfig)
+        private readonly EdgeFeatureHubConfig _featureHubConfig;
+        
+        public EmailSender(EmailConfig emailConfig)
         {
             _emailConfig = emailConfig;
+            _featureHubConfig = new EdgeFeatureHubConfig("http://localhost:8085","ce629c5b-a0c6-4f71-8767-9923c515599b/s4M0YTSp3vHP56yoFsFJdI1u9vp1cvDwONfdBZAa");
         }
-        
+
         public async Task SendEmail(Message message)
         {
-            var emailMessage = await CreateEmailMessage(message);
-            Console.WriteLine(message.To);
-            await Send(emailMessage);
+            var fh = await _featureHubConfig.NewContext().Build();
+            if (fh["SendEmailFeature"].IsEnabled)
+            {
+                var emailMessage = await CreateEmailMessage(message);
+                Console.WriteLine(message.To);
+                await Send(emailMessage);
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
         }
 
         private async Task<MimeMessage> CreateEmailMessage(Message message)

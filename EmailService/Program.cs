@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using EmailService.Infrastructure;
 using EmailService.Models;
+using FeatureHubSDK;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,13 +20,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
 var emailConfig = builder.Configuration
     .GetSection("MailConfig")
     .Get<EmailConfig>();
 
+
 builder.Services.AddSingleton<EmailConfig>(emailConfig);
-builder.Services.AddScoped<IEmailSender, EmailEmailSender>();
+builder.Services.AddScoped<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
