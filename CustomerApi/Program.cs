@@ -9,7 +9,7 @@ using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 string cloudAMQPConnectionString =
-    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
+    "";
 // Add services to the container.
 
 builder.Services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase("CustomersDb"));
