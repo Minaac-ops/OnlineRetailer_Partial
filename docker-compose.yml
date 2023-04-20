@@ -19,3 +19,9 @@ services:
       dockerfile: "ProductApi/Dockerfile"
     ports:
       - 8002:80
+  emailservice:
+    build:
+      context: .
+      dockerfile: "EmailService/Dockerfile"
+    ports:
+      - 8003:80
