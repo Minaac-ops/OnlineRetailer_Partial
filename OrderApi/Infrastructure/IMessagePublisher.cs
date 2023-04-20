@@ -1,16 +1,17 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Shared;
 
 namespace OrderApi.Infrastructure
 {
     public interface IMessagePublisher
     {
-        void PublishOrderCreatedMessage(int? customerId, int orderId,
+        Task PublishOrderCreatedMessage(int? customerId, int orderId,
             IList<OrderLine> orderLines);
-        void CreditStandingChangedMessage(int orderResultCustomerId);
-        void OrderStatusChangedMessage(int id, IList<OrderLine> orderLines, string topic);
-        void PublishOrderAccepted(int orderCustomerId, int orderId);
-        void PublishOrderCancelled(int orderCustomerId, int orderId);
-        void PublishOrderShippedEmail(int customerId, int orderId);
+        Task CreditStandingChangedMessage(int orderResultCustomerId);
+        Task OrderStatusChangedMessage(int id, IList<OrderLine> orderLines, string topic);
+        Task PublishOrderAccepted(int orderCustomerId, int orderId);
+        Task PublishOrderCancelled(int orderCustomerId, int orderId);
+        Task PublishOrderShippedEmail(int customerId, int orderId);
     }
 }

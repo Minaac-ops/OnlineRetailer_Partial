@@ -5,24 +5,28 @@ services:
     build:
       context: .
       dockerfile: "CustomerApi/Dockerfile"
+    image: onlineretailer_partial-customerapi
     ports:
       - 8000:80
   orderapi:
     build:
       context: .
       dockerfile: "OrderApi/Dockerfile"
+    image: onlineretailer_partial-orderapi
     ports:
       - 8001:80
   productapi:
     build:
       context: .
       dockerfile: "ProductApi/Dockerfile"
+    image: onlineretailer_partial-productapi
     ports:
       - 8002:80
   emailservice:
     build:
       context: .
       dockerfile: "EmailService/Dockerfile"
+    image: onlineretailer_partial-emailservice
     ports:
       - 8003:80
     depends_on:

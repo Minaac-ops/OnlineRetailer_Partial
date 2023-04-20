@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using EasyNetQ;
 using Shared;
 
@@ -19,7 +20,7 @@ namespace OrderApi.Infrastructure
             bus.Dispose();
         }
 
-        public async void PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
+        public async Task PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
             Console.WriteLine("publisheorderCreateMessage topic: ");
             var messageCustomer = new OrderCreatedMessage
@@ -42,7 +43,7 @@ namespace OrderApi.Infrastructure
             Console.WriteLine("OrderPublisher OrderCreatedMessage to product after publish.");
         }
 
-        public async void CreditStandingChangedMessage(int orderResultCustomerId)
+        public async Task CreditStandingChangedMessage(int orderResultCustomerId)
         {
             var message = new CreditStandingChangedMessage
             {
@@ -51,7 +52,7 @@ namespace OrderApi.Infrastructure
             await bus.PubSub.PublishAsync(message, "paid");
         }
 
-        public async void OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
+        public async Task OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
         {
             var message = new OrderStatusChangedMessage
             {
@@ -61,7 +62,7 @@ namespace OrderApi.Infrastructure
             await bus.PubSub.PublishAsync(message, $"{topic}");
         }
 
-        public async void PublishOrderAccepted(int orderCustomerId, int orderId)
+        public async Task PublishOrderAccepted(int orderCustomerId, int orderId)
         {
             var message = new EmailMessage
             {
@@ -73,7 +74,7 @@ namespace OrderApi.Infrastructure
 
         }
 
-        public async void PublishOrderCancelled(int orderCustomerId, int orderId)
+        public async Task PublishOrderCancelled(int orderCustomerId, int orderId)
         {
             var message = new EmailMessage
             {
@@ -84,7 +85,7 @@ namespace OrderApi.Infrastructure
             await bus.PubSub.PublishAsync(message, "Cancelled");
         }
 
-        public async void PublishOrderShippedEmail(int customerId, int orderId)
+        public async Task PublishOrderShippedEmail(int customerId, int orderId)
         {
             var message = new EmailMessage
             {

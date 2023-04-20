@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using EasyNetQ;
 using Microsoft.Extensions.DependencyInjection;
 using OrderApi.Data;
@@ -20,7 +21,7 @@ namespace OrderApi.Infrastructure
             this.connectionString = connectionString;
         }
 
-        public async void Start()
+        public async Task Start()
         {
             using (_bus = RabbitHutch.CreateBus(connectionString))
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Security.Cryptography.Xml;
 using System.Threading;
+using System.Threading.Tasks;
 using CustomerApi.Data;
 using CustomerApi.Models;
 using EasyNetQ;
@@ -22,15 +23,15 @@ namespace CustomerApi.Infrastructure
             this.connectionString = connectionString;
         }
 
-        public void Start()
+        public async Task Start()
         {
             using (bus = RabbitHutch.CreateBus(connectionString))
             {
-                bus.PubSub.SubscribeAsync<CreditStandingChangedMessage>
+                await bus.PubSub.SubscribeAsync<CreditStandingChangedMessage>
                     ("creditChanged",HandleChangeCreditStanding,x => x.WithTopic("paid"));
                 Console.WriteLine("CustomerListener: Listening to CreditStandingChangedMessage");
                 
-                bus.PubSub.SubscribeAsync<OrderCreatedMessage>
+                await bus.PubSub.SubscribeAsync<OrderCreatedMessage>
                     ("checkCreditStanding", HandleCheckCreditStanding,x => x.WithTopic("checkCredit"));
                 Console.WriteLine("CustomerListener: Listening to OrderCreatedMessage");
                 
