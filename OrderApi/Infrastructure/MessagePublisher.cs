@@ -60,5 +60,38 @@ namespace OrderApi.Infrastructure
             };
             await bus.PubSub.PublishAsync(message, $"{topic}");
         }
+
+        public async void PublishOrderAccepted(int orderCustomerId, int orderId)
+        {
+            var message = new EmailMessage
+            {
+                CustomerId = orderCustomerId,
+                OrderId = orderId
+            };
+
+            await bus.PubSub.PublishAsync(message,"OrderConfirmed");
+
+        }
+
+        public async void PublishOrderCancelled(int orderCustomerId, int orderId)
+        {
+            var message = new EmailMessage
+            {
+                CustomerId = orderCustomerId,
+                OrderId = orderId
+            };
+
+            await bus.PubSub.PublishAsync(message, "Cancelled");
+        }
+
+        public async void PublishOrderShippedEmail(int customerId, int orderId)
+        {
+            var message = new EmailMessage
+            {
+                CustomerId = customerId,
+                OrderId = orderId
+            };
+            await bus.PubSub.PublishAsync(message, "Shipped");
+        }
     }
 }

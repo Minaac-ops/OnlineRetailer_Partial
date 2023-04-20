@@ -3,7 +3,7 @@ using EmailService.Models;
 
 namespace EmailService.Infrastructure
 {
-    public interface ISender
+    public interface IEmailSender
     {
         Task SendEmail(Message message);
     }

@@ -16,20 +16,20 @@ namespace EmailService.Controllers
     public class EmailController : ControllerBase
     {
 
-        private ISender _sender;
+        private IEmailSender _emailSender;
 
-        public EmailController(ISender sender)
+        public EmailController(IEmailSender emailSender)
         {
-            _sender = sender;
+            _emailSender = emailSender;
         }
 
 
         [HttpGet]
         public async Task<string> Get()
         {
-            var message = new Message(new string[] {"sikypi@givmail.com"}, "testemail", "This is the contect");
+            var message = new Message(new string[] {"sikypi@givmail.com"},"testname", "testemail", "This is the contect");
             Console.WriteLine(message.To);
-            await _sender.SendEmail(message);
+            await _emailSender.SendEmail(message);
             return "message send";
         }
     }

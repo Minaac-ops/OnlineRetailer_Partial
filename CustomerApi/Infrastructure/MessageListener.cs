@@ -55,7 +55,8 @@ namespace CustomerApi.Infrastructure
                 await repo?.Edit(customer.Id, customer);
                 var orderAcceptedMessage = new OrderAcceptedMessage
                 {
-                    OrderId = obj.OrderId
+                    OrderId = obj.OrderId,
+                    CustomerId = obj.CustomerId
                 };
                 await bus.PubSub.PublishAsync(orderAcceptedMessage);
                 Console.WriteLine("CustomerListener: PublishedOrderAccepted");
@@ -63,7 +64,7 @@ namespace CustomerApi.Infrastructure
             {
                 var orderRejectedMessage = new OrderRejectedMessage
                 {
-                    OrderId = obj.OrderId
+                    OrderId = obj.OrderId,
                 };
                 await bus.PubSub.PublishAsync(orderRejectedMessage);
                 Console.WriteLine("CustomerListener: PublishedOrderRejected");

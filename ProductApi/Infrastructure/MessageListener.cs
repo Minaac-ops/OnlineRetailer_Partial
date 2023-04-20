@@ -104,7 +104,8 @@ namespace ProductApi.Infrastructure
 
                 var replyMessage = new OrderAcceptedMessage
                 {
-                    OrderId = message.OrderId
+                    OrderId = message.OrderId,
+                    CustomerId = message.CustomerId,
                 };
                     
                 await _bus.PubSub.PublishAsync(replyMessage);

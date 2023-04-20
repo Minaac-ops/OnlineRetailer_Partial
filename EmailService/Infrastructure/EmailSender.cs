@@ -6,11 +6,11 @@ using MimeKit;
 
 namespace EmailService.Infrastructure
 {
-    public class Sender : ISender
+    public class EmailEmailSender : IEmailSender
     {
         private readonly EmailConfig _emailConfig;
 
-        public Sender(EmailConfig emailConfig)
+        public EmailEmailSender(EmailConfig emailConfig)
         {
             _emailConfig = emailConfig;
         }
@@ -25,7 +25,7 @@ namespace EmailService.Infrastructure
         private async Task<MimeMessage> CreateEmailMessage(Message message)
         {
             var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress("email",_emailConfig.From));
+            emailMessage.From.Add(new MailboxAddress(message.CustomerName,_emailConfig.From));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) {Text = message.Content};

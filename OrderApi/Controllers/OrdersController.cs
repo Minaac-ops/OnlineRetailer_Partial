@@ -118,6 +118,7 @@ namespace OrderApi.Controllers
                     {
                         isCompleted = true;
                         Thread.Sleep(1000);
+                        _messagePublisher.PublishOrderAccepted(order.CustomerId, order.Id);
                     }
                 }
                 Console.WriteLine("right before return status should be "+ newOrder.Status);
@@ -125,6 +126,7 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
+                _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                 throw new Exception(e.Message);
             }
         }
@@ -142,6 +144,7 @@ namespace OrderApi.Controllers
                 repository.Edit(order);
                 
                 _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
+                _messagePublisher.PublishOrderShippedEmail(order.CustomerId, id);
             }
             catch (Exception e)
             {
@@ -195,16 +198,19 @@ namespace OrderApi.Controllers
                         await repository.Edit(order);
                         _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
                         _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines,"cancelled");
+                        _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                         break;
                     case OrderDto.OrderStatus.Paid:
                         order.Status = OrderDto.OrderStatus.Cancelled;
                         await repository.Edit(order);
                         _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                        _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                         break;
                     case OrderDto.OrderStatus.Tentative:
                         order.Status = OrderDto.OrderStatus.Cancelled;
                         await repository.Edit(order);
                         _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                        _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                         break;
                 }
             }

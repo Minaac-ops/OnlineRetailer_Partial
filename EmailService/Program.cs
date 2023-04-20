@@ -1,11 +1,16 @@
+using System.Threading.Tasks;
 using EmailService.Infrastructure;
 using EmailService.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+string cloudAMQPConnectionString =
+    "";
 
 // Add services to the container.
 
@@ -14,12 +19,13 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 var emailConfig = builder.Configuration
     .GetSection("MailConfig")
     .Get<EmailConfig>();
 
 builder.Services.AddSingleton<EmailConfig>(emailConfig);
-builder.Services.AddScoped<ISender, Sender>();
+builder.Services.AddScoped<IEmailSender, EmailEmailSender>();
 
 var app = builder.Build();
 
@@ -29,6 +35,9 @@ var app = builder.Build();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+Task.Factory.StartNew(() =>
+    new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
 app.UseHttpsRedirection();
 

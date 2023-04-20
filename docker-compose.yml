@@ -25,3 +25,5 @@ services:
       dockerfile: "EmailService/Dockerfile"
     ports:
       - 8003:80
+    depends_on:
+      - customerapi

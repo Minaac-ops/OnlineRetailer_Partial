@@ -9,5 +9,8 @@ namespace OrderApi.Infrastructure
             IList<OrderLine> orderLines);
         void CreditStandingChangedMessage(int orderResultCustomerId);
         void OrderStatusChangedMessage(int id, IList<OrderLine> orderLines, string topic);
+        void PublishOrderAccepted(int orderCustomerId, int orderId);
+        void PublishOrderCancelled(int orderCustomerId, int orderId);
+        void PublishOrderShippedEmail(int customerId, int orderId);
     }
 }

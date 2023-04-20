@@ -22,7 +22,7 @@ namespace CustomerApi.Data
 
             List<Customer> orders = new List<Customer>
             {
-                new Customer {CompanyName = "Normal",BillingAddress = "Torvet 4,6700 Esbjerg", Email = "normal@email.com", PhoneNo = 12345678, ShippingAddress = "Torvet 4, 6700 Esbjerg",CreditStanding = true}
+                new Customer {CompanyName = "Normal",BillingAddress = "Torvet 4,6700 Esbjerg", Email = "matas@email.com", PhoneNo = 12345678, ShippingAddress = "Torvet 4, 6700 Esbjerg",CreditStanding = true}
             };
 
             await context.Customers.AddRangeAsync(orders);
