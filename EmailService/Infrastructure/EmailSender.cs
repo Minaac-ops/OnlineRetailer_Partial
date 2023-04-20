@@ -16,7 +16,7 @@ namespace EmailService.Infrastructure
         public EmailSender(EmailConfig emailConfig)
         {
             _emailConfig = emailConfig;
-            _featureHubConfig = new EdgeFeatureHubConfig("http://localhost:8085","ce629c5b-a0c6-4f71-8767-9923c515599b/s4M0YTSp3vHP56yoFsFJdI1u9vp1cvDwONfdBZAa");
+            _featureHubConfig = new EdgeFeatureHubConfig("http://localhost:8085","a54098bc-b44b-4b07-95ae-ba5df4d147d8/s4M0YTSp3vHP56yoFsFJdI1u9vp1cvDwONfdBZAa");
         }
 
         public async Task SendEmail(Message message)
