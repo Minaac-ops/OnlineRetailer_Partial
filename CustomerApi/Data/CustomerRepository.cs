@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using CustomerApi.Models;
-using Shared;
 
 namespace CustomerApi.Data
 {
@@ -19,9 +18,11 @@ namespace CustomerApi.Data
         
         async Task<Customer> IRepository<Customer>.Get(int? id)
         {
-            var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
-            Console.WriteLine(customer.CreditStanding);
-            return customer;
+            {
+                var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
+                Console.WriteLine(customer.CreditStanding);
+                return customer;
+            }
         }
 
         async Task<IEnumerable<Customer>> IRepository<Customer>.GetAll()

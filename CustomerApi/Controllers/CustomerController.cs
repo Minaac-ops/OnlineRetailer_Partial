@@ -42,17 +42,17 @@ namespace CustomerApi.Controllers
         [HttpGet("{id}", Name = "GetCustomer")]
         public async Task<CustomerDto> Get(int id)
         {
-            try
-            {
-                var item = await _repository.Get(id);
+                try
+                {
+                    var item = await _repository.Get(id);
                 
-                return _converter.Convert(item);
+                    return _converter.Convert(item);
+                }
+                catch (Exception e)
+                {
+                    throw new Exception("Customer with id " + id+" couldn't be found due to error " +e.Message);
+                }
             }
-            catch (Exception e)
-            {
-                throw new Exception("Customer with id " + id+" couldn't be found due to error " +e.Message);
-            }
-        }
 
         [HttpPut("{id}")]
         public async Task<CustomerDto> Put(int id, [FromBody] CustomerDto customer)

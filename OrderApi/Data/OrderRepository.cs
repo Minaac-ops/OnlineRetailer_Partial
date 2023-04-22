@@ -4,6 +4,7 @@ using System.Linq;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Monitoring;
 using OrderApi.Models;
 using Shared;
 
@@ -75,6 +76,7 @@ namespace OrderApi.Data
 
         async Task<IEnumerable<Order>> IRepository<Order>.GetAll()
         {
+            using var activity = MonitorService.ActivitySource.StartActivity("getall");
             var select = db.Orders.Select(order => new Order()
             {
                 Id = order.Id,
@@ -89,7 +91,7 @@ namespace OrderApi.Data
                     OrderId = ol.OrderId,
                 }).ToList(),
             });
-            return await select.ToListAsync();
+            return await @select.ToListAsync();
         }
 
         async Task IRepository<Order>.Remove(int id)

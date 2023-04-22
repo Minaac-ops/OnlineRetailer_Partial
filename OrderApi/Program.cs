@@ -1,7 +1,13 @@
+using System;
+using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Monitoring;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
@@ -23,6 +29,19 @@ string cloudAMQPConnectionString =
 // (see docker-compose.yml)
 //string cloudAMQPConnectionString = "host=rabbitmq";
 
+// Telemetry
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracerProviderBuilder =>
+        tracerProviderBuilder
+            .AddSource(DiagnosticsConfig.ActivitySource.Name)
+            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(MonitorService.ServiceName))
+            .AddAspNetCoreInstrumentation()
+            .AddConsoleExporter()
+            .AddZipkinExporter(config =>
+            {
+                config.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
+            }));
+
 //register services for dependency injection
 
 builder.Services.AddDbContext<OrderApiContext>(opt => opt.UseInMemoryDatabase("OrdersDb"));
@@ -33,7 +52,6 @@ builder.Services.AddSingleton<IConverter<Order, OrderDto>, OrderConverter>();
 
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();
-
 // Register MessagePublisher (a messaging gateway) for dependency injection
 builder.Services.AddSingleton<IMessagePublisher>(new
     MessagePublisher(cloudAMQPConnectionString));
@@ -67,3 +85,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public static class DiagnosticsConfig
+{
+    public const string ServiceName = "OrderService";
+    public static ActivitySource ActivitySource = new ActivitySource(ServiceName);
+}

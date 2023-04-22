@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Monitoring;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
@@ -32,8 +33,10 @@ namespace OrderApi.Controllers
         [HttpGet]
         public async Task<IEnumerable<OrderDto>> Get()
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
             try
             {
+                MonitorService.Log.Debug("OrdersController Get");
                 var orders = await repository.GetAll();
                 var dtos = orders.Select(o => new OrderDto
                 {
@@ -106,7 +109,7 @@ namespace OrderApi.Controllers
                 //publish orderstatuschanged
 
                 Console.WriteLine("before published");
-                _messagePublisher.PublishOrderCreatedMessage(newOrder.CustomerId, newOrder.Id, newOrder.OrderLines);
+                await _messagePublisher.PublishOrderCreatedMessage(newOrder.CustomerId, newOrder.Id, newOrder.OrderLines);
                 
                 // Wait until order status is "completed"
                 bool isCompleted = false;
@@ -118,7 +121,7 @@ namespace OrderApi.Controllers
                     {
                         isCompleted = true;
                         Thread.Sleep(1000);
-                        _messagePublisher.PublishOrderAccepted(order.CustomerId, order.Id);
+                        await _messagePublisher.PublishOrderAccepted(order.CustomerId, order.Id);
                     }
                 }
                 Console.WriteLine("right before return status should be "+ newOrder.Status);
@@ -126,7 +129,7 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
-                _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
+                await _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                 throw new Exception(e.Message);
             }
         }
@@ -141,10 +144,10 @@ namespace OrderApi.Controllers
             {
                 var order = await repository.Get(id);
                 order.Status = OrderDto.OrderStatus.Shipped;
-                repository.Edit(order);
+                await repository.Edit(order);
                 
-                _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
-                _messagePublisher.PublishOrderShippedEmail(order.CustomerId, id);
+                await _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines, "shipped");
+                await _messagePublisher.PublishOrderShippedEmail(order.CustomerId, id);
             }
             catch (Exception e)
             {
@@ -165,7 +168,7 @@ namespace OrderApi.Controllers
                 order.Status = OrderDto.OrderStatus.Paid;
                 await repository.Edit(order);
                 
-                _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
+                await _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
             }
             catch (Exception e)
             {
@@ -196,21 +199,21 @@ namespace OrderApi.Controllers
                     case OrderDto.OrderStatus.Completed:
                         order.Status = OrderDto.OrderStatus.Cancelled;
                         await repository.Edit(order);
-                        _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
-                        _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines,"cancelled");
-                        _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
+                        await _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
+                        await _messagePublisher.OrderStatusChangedMessage(id, order.OrderLines,"cancelled");
+                        await _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                         break;
                     case OrderDto.OrderStatus.Paid:
                         order.Status = OrderDto.OrderStatus.Cancelled;
                         await repository.Edit(order);
-                        _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
-                        _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
+                        await _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                        await _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                         break;
                     case OrderDto.OrderStatus.Tentative:
                         order.Status = OrderDto.OrderStatus.Cancelled;
                         await repository.Edit(order);
-                        _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
-                        _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
+                        await _messagePublisher.OrderStatusChangedMessage(id,order.OrderLines,"cancelled");
+                        await _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                         break;
                 }
             }

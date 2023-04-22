@@ -22,7 +22,6 @@ namespace OrderApi.Infrastructure
 
         public async Task PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
-            Console.WriteLine("publisheorderCreateMessage topic: ");
             var messageCustomer = new OrderCreatedMessage
             { 
                 CustomerId = customerId,
