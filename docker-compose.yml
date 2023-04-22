@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: "CustomerApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-customerapi
     ports:
       - 8000:80
   orderapi:

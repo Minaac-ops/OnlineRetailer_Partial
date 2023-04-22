@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
 using CustomerApi.Models;
+using Monitoring;
 
 namespace CustomerApi.Data
 {
@@ -15,14 +16,13 @@ namespace CustomerApi.Data
         {
             db = context;
         }
-        
+
         async Task<Customer> IRepository<Customer>.Get(int? id)
         {
-            {
-                var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
-                Console.WriteLine(customer.CreditStanding);
-                return customer;
-            }
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
+            Console.WriteLine(customer.CreditStanding);
+            return customer;
         }
 
         async Task<IEnumerable<Customer>> IRepository<Customer>.GetAll()
@@ -36,10 +36,11 @@ namespace CustomerApi.Data
                 BillingAddress = customer.BillingAddress,
                 ShippingAddress = customer.ShippingAddress
             }).ToListAsync();
-            if (select==null)
+            if (select == null)
             {
                 throw new Exception("Customers couldn't be fetched");
             }
+
             return select;
         }
 
@@ -52,17 +53,19 @@ namespace CustomerApi.Data
             {
                 throw new Exception("Customer couldn't be added to the database.");
             }
-            
+
             await db.SaveChangesAsync();
             return newCustomer.Entity;
         }
-        async Task<Customer> IRepository<Customer>.Edit(int id,Customer entity)
+
+        async Task<Customer> IRepository<Customer>.Edit(int id, Customer entity)
         {
+            MonitorService.ActivitySource.StartActivity();
             var customerToUpdate = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
             customerToUpdate.Email = entity.Email;
             customerToUpdate.BillingAddress = entity.BillingAddress;
             customerToUpdate.ShippingAddress = entity.ShippingAddress;
-            
+
             db.Customers.Entry(customerToUpdate).State = EntityState.Modified;
             await db.SaveChangesAsync();
             return customerToUpdate;

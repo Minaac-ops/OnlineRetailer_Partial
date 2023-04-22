@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using CustomerApi.Data;
 using CustomerApi.Infrastructure;
@@ -5,6 +6,9 @@ using CustomerApi.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Monitoring;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,7 +23,6 @@ builder.Services.AddScoped<IRepository<Customer>, CustomerRepository>();
 
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();
-
 
 
 builder.Services.AddControllers();

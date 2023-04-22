@@ -26,6 +26,8 @@ namespace OrderApi.Infrastructure
 
         public async Task PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("Entered PublishOrderCreatedMessage to publish OrderCreatedMessage");
             var messageCustomer = new OrderCreatedMessage
             { 
                 CustomerId = customerId,
@@ -41,9 +43,10 @@ namespace OrderApi.Infrastructure
             };
             
             await bus.PubSub.PublishAsync(messageCustomer, "checkCredit");
-            Console.WriteLine("OrderPublisher OrderCreatedMessage to customer after publish.");
+            MonitorService.Log.Here().Debug("Published OrderCreatedMessage to CustomerApi");
+            
             await bus.PubSub.PublishAsync(messageProduct, "checkProductAvailability");
-            Console.WriteLine("OrderPublisher OrderCreatedMessage to product after publish.");
+            MonitorService.Log.Here().Debug("Published OrderCreatedMessage to ProductApi");
         }
 
         public async Task CreditStandingChangedMessage(int orderResultCustomerId)
@@ -57,24 +60,29 @@ namespace OrderApi.Infrastructure
 
         public async Task OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("OrderStatusChangedMessage before publish");
             var message = new OrderStatusChangedMessage
             {
                 OrderId = id,
                 OrderLine = orderLines
             };
+            
             await bus.PubSub.PublishAsync(message, $"{topic}");
+            MonitorService.Log.Here().Debug("OrderStatusChangedMessage after publish");
         }
 
         public async Task PublishOrderAccepted(int orderCustomerId, int orderId)
         {
             using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("OrdersPublisher, PublishOrderAccepted");
+            MonitorService.Log.Here().Debug("PublishOrderAccepted before publish");
             var message = new EmailMessage
             {
                 CustomerId = orderCustomerId,
                 OrderId = orderId
             };
-
+            
+            // Adding header to the message so the activity can continue in emailService
             var activityCtx = activity?.Context ?? Activity.Current?.Context ?? default;
             var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
             var propagator = new TraceContextPropagator();
@@ -84,28 +92,54 @@ namespace OrderApi.Infrastructure
             });
 
             await bus.PubSub.PublishAsync(message,"OrderConfirmed");
-
+            MonitorService.Log.Here().Debug("PublishOrderAccepted after publish");
         }
 
         public async Task PublishOrderCancelled(int orderCustomerId, int orderId)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("PublishOrderCancelled before publish");
+            
             var message = new EmailMessage
             {
                 CustomerId = orderCustomerId,
                 OrderId = orderId
             };
+            
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = activity?.Context ?? Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
 
             await bus.PubSub.PublishAsync(message, "Cancelled");
+            MonitorService.Log.Here().Debug("PublishOrderCancelled after publish");
         }
 
         public async Task PublishOrderShippedEmail(int customerId, int orderId)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("PublishOrderShippedEmail before handle");
             var message = new EmailMessage
             {
                 CustomerId = customerId,
                 OrderId = orderId
             };
+            
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = activity?.Context ?? Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
+            
             await bus.PubSub.PublishAsync(message, "Shipped");
+            MonitorService.Log.Here().Debug("PublishOrderShippedEmail after  handle");
         }
     }
 }

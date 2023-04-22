@@ -34,16 +34,16 @@ namespace EmailService.Infrastructure
                 await _bus.PubSub.SubscribeAsync<EmailMessage>(
                     "sendConfirmationEmail", HandleConfirmationEmail, x => x.WithTopic("OrderConfirmed"));
 
-                Console.WriteLine("EmailListener: Subscribing to OrderAccepted");
+                MonitorService.Log.Here().Debug("EmailListener: Subscribing to OrderAccepted");
 
                 await _bus.PubSub.SubscribeAsync<EmailMessage>(
                     "sendCancellationEmail", HandleCancellationEmail, x => x.WithTopic("Cancelled"));
-                Console.WriteLine("EmailListener: subscribing to OrderCancelled");
+                MonitorService.Log.Here().Debug("EmailListener: Subscribing to OrderCancelled");
 
                 await _bus.PubSub.SubscribeAsync<EmailMessage>(
                     "sendOrderShippedEmail", HandleSendShippedEmail, x => x.WithTopic("Shipped"));
-                Console.WriteLine("EmailListener: subscribing to OrderShipped");
-                
+                MonitorService.Log.Here().Debug("EmailListener: subscribing to OrderShipped");
+
                 lock (this)
                 {
                     Monitor.Wait(this);
@@ -53,81 +53,102 @@ namespace EmailService.Infrastructure
 
         private async void HandleSendShippedEmail(EmailMessage arg)
         {
-            Console.WriteLine("EmailListener handle sendshippedemail");
+            MonitorService.Log.Here().Debug("HandleSendShippedEmail before handle");
+            
+            // Propagator to continue the activity from OrderController
+            var propagator = new TraceContextPropagator();
+            var parentCtx = propagator.Extract(default, arg,
+                (r, key) =>
+                {
+                    return new List<string>(new[]
+                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
+                });
+            Baggage.Current = parentCtx.Baggage;
+            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
+                parentCtx.ActivityContext);
+            
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IEmailSender>();
-
             var customer = await GetCustomer(arg.CustomerId);
+            
+            MonitorService.Log.Here().Debug("Email to send confirmation email to: " + customer.Email);
+
             var message = new Message(new string[] {customer.Email}, customer.CompanyName,
                 "Order shipped!", "Your order has been shipped! It will be delivered in 2-3 business days.");
             await repo.SendEmail(message);
-            Console.WriteLine("EmailListener: Handled ship email");
+            MonitorService.Log.Here().Debug("HandleSendShippedEmail after handle");
         }
 
         private async void HandleCancellationEmail(EmailMessage obj)
         {
-            Console.WriteLine("Handle CancellationEmail");
+            MonitorService.Log.Here().Debug("HandleCancellationEmail before handle");
+            
+            // Propagator to continue the activity from OrderController
+            var propagator = new TraceContextPropagator();
+            var parentCtx = propagator.Extract(default, obj,
+                (r, key) =>
+                {
+                    return new List<string>(new[]
+                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
+                });
+            Baggage.Current = parentCtx.Baggage;
+            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
+                parentCtx.ActivityContext);
+
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IEmailSender>();
-
             var customer = await GetCustomer(obj.CustomerId);
+            
+            MonitorService.Log.Here().Debug("Email to send confirmation email to: " + customer.Email);
 
-            if (customer == null)
-            {
-                Console.WriteLine("Couldnt get customer");
-            }
-            else
-            {
-                var message = new Message(new string[] {customer.Email}, customer.CompanyName,
-                    "Order cancelled!",
-                    "Your order was not cancelled either because:\n" +
-                    "- We don't have the requested products\n" +
-                    "- Your account has bad credit\n" +
-                    "- You cancelled your order");
-                await repo.SendEmail(message);
-            }
-            Console.WriteLine("Email Listener: HandledCancelation ");
+            var message = new Message(new string[] {customer.Email}, customer.CompanyName,
+                "Order cancelled!",
+                "Your order was not cancelled either because:\n" +
+                "- We don't have the requested products\n" +
+                "- Your account has bad credit\n" +
+                "- You cancelled your order");
+            await repo.SendEmail(message);
+
+            MonitorService.Log.Here().Debug("HandleCancellationEmail after handle");
         }
 
         private async void HandleConfirmationEmail(EmailMessage arg)
         {
-            MonitorService.Log.Here().Debug("EmailListener HandleConfirmationEmail");
-
+            MonitorService.Log.Here().Debug("HandleConfirmationEmail before handle"); 
+            
+            // Propagator to continue the activity from OrderController
             var propagator = new TraceContextPropagator();
-            var parentCtx = propagator.Extract(default, arg, (r, key) =>
-            {
-                return new List<string>(new[] { r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty });
-            });
+            var parentCtx = propagator.Extract(default, arg,
+                (r, key) =>
+                {
+                    return new List<string>(new[]
+                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
+                });
             Baggage.Current = parentCtx.Baggage;
-            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer, parentCtx.ActivityContext);
-                
+            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
+                parentCtx.ActivityContext);
+
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IEmailSender>();
-
             var customer = await GetCustomer(arg.CustomerId);
 
-            if (customer == null)
-            {
-                Console.WriteLine("couldnt get customer");
-            }
-            else
-            {
-                Console.WriteLine("EmailListener customer email: " + customer.Email);
-                var message = new Message(new string[] {customer.Email}, customer.CompanyName, "Order accepted",
-                    "Congratulations! Your order was accepted!");
-                await repo.SendEmail(message);
-                Console.WriteLine("handled confirmationemail");
-            }
+            MonitorService.Log.Here().Debug("Email to send confirmation email to: " + customer.Email);
+
+            var message = new Message(new string[] {customer.Email}, customer.CompanyName, "Order accepted",
+                "Congratulations! Your order was accepted!");
+            await repo.SendEmail(message);
+            MonitorService.Log.Here().Debug("HandleConfirmationEmail handled");
         }
 
         private async Task<CustomerDto> GetCustomer(int customerId)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
             RestClient client = new RestClient("http://customerapi/customer/");
-            
             var request = new RestRequest(customerId.ToString());
+
             var customerResponse = await client.GetAsync<CustomerDto>(request);
             return customerResponse ?? throw new InvalidOperationException();
         }

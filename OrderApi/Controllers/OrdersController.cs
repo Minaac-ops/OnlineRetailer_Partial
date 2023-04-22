@@ -100,17 +100,13 @@ namespace OrderApi.Controllers
             MonitorService.Log.Here().Debug("OrdersController POST");
             //Checking if order is null
             if (order == null) throw new Exception("Fill out order details.");
-
             try
             {
                 order.Status = OrderDto.OrderStatus.Tentative;
-                Console.WriteLine("OrderController before add should be tentative: "+order.Status.ToString());
                 var newOrder = await repository.Add(_converter.Convert(order));
-                Console.WriteLine("OrderController after add should be tentative: "+order.Status.ToString());
 
                 //publish orderstatuschanged
 
-                Console.WriteLine("before published");
                 await _messagePublisher.PublishOrderCreatedMessage(newOrder.CustomerId, newOrder.Id, newOrder.OrderLines);
                 
                 // Wait until order status is "completed"
@@ -126,7 +122,6 @@ namespace OrderApi.Controllers
                         await _messagePublisher.PublishOrderAccepted(order.CustomerId, order.Id);
                     }
                 }
-                Console.WriteLine("right before return status should be "+ newOrder.Status);
                 return _converter.Convert(newOrder);
             }
             catch (Exception e)
@@ -141,7 +136,9 @@ namespace OrderApi.Controllers
         // with topic set to "shipped".
         [HttpPut("{id}/ship")]
         public async Task Ship(int id)
-        {
+        { 
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("Entered OrderController Pay");
             try
             {
                 var order = await repository.Get(id);
@@ -187,6 +184,8 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/cancel")]
         public async Task Cancel(int id)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("Entered OrderController Cancel");
             try
             {
                 var order = await repository.Get(id);

@@ -1,5 +1,4 @@
 using System;
-using System.Security.Cryptography.Xml;
 using System.Threading;
 using System.Threading.Tasks;
 using CustomerApi.Data;
@@ -44,7 +43,6 @@ namespace CustomerApi.Infrastructure
 
         private async void HandleCheckCreditStanding(OrderCreatedMessage obj)
         {
-            Console.WriteLine("CustomerListener: Received OrderCreatedMessage");
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IRepository<Customer>>();

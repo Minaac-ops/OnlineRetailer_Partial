@@ -21,7 +21,7 @@ namespace OrderApi.Data
 
         async Task<Order> IRepository<Order>.Add(Order entity)
         {
-            Console.WriteLine("OrderRepo: Before adds to db " + entity);
+            using var activity = MonitorService.ActivitySource.StartActivity();
             if (entity == null)
             {
                 throw new Exception("An empty order can't be saved to the database.");
@@ -55,6 +55,7 @@ namespace OrderApi.Data
 
         async Task<Order> IRepository<Order>.Get(int id)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
             var entity = db.Orders
                 .Where(o => o.Id == id)
                 .Select(order => new Order()
@@ -76,7 +77,8 @@ namespace OrderApi.Data
 
         async Task<IEnumerable<Order>> IRepository<Order>.GetAll()
         {
-            using var activity = MonitorService.ActivitySource.StartActivity("getall");
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("Entered method GetAll");
             var select = db.Orders.Select(order => new Order()
             {
                 Id = order.Id,
