@@ -1,9 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using EasyNetQ;
 using EmailService.Models;
 using Microsoft.Extensions.DependencyInjection;
+using Monitoring;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using RestSharp;
 using Shared;
 
@@ -88,7 +93,16 @@ namespace EmailService.Infrastructure
 
         private async void HandleConfirmationEmail(EmailMessage arg)
         {
-            Console.WriteLine("handle confirmationemail");
+            MonitorService.Log.Here().Debug("EmailListener HandleConfirmationEmail");
+
+            var propagator = new TraceContextPropagator();
+            var parentCtx = propagator.Extract(default, arg, (r, key) =>
+            {
+                return new List<string>(new[] { r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty });
+            });
+            Baggage.Current = parentCtx.Baggage;
+            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer, parentCtx.ActivityContext);
+                
             using var scope = _provider.CreateScope();
             var service = scope.ServiceProvider;
             var repo = service.GetService<IEmailSender>();

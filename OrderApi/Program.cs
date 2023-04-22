@@ -33,7 +33,7 @@ string cloudAMQPConnectionString =
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracerProviderBuilder =>
         tracerProviderBuilder
-            .AddSource(DiagnosticsConfig.ActivitySource.Name)
+            .AddSource("OrderApi")
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(MonitorService.ServiceName))
             .AddAspNetCoreInstrumentation()
             .AddConsoleExporter()
@@ -85,9 +85,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-public static class DiagnosticsConfig
-{
-    public const string ServiceName = "OrderService";
-    public static ActivitySource ActivitySource = new ActivitySource(ServiceName);
-}

@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using EasyNetQ;
+using Monitoring;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using Shared;
 
 namespace OrderApi.Infrastructure
@@ -63,11 +67,21 @@ namespace OrderApi.Infrastructure
 
         public async Task PublishOrderAccepted(int orderCustomerId, int orderId)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("OrdersPublisher, PublishOrderAccepted");
             var message = new EmailMessage
             {
                 CustomerId = orderCustomerId,
                 OrderId = orderId
             };
+
+            var activityCtx = activity?.Context ?? Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
 
             await bus.PubSub.PublishAsync(message,"OrderConfirmed");
 

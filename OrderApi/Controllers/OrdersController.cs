@@ -96,6 +96,8 @@ namespace OrderApi.Controllers
         [HttpPost]
         public async Task<OrderDto> Post([FromBody] OrderDto order)
         {
+            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("OrdersController POST");
             //Checking if order is null
             if (order == null) throw new Exception("Fill out order details.");
 
