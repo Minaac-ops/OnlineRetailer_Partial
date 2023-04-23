@@ -23,7 +23,8 @@ pipeline {
         }
         stage("Deploy") {
             steps {
-                build job: "OnlineRetailer_Partial-Rollback", parameters: [[$class: "StringParameterValue", name: "DEPLOY_NUMBER", value: "${BUILD_NUMBER}"]]
+                sh "docker compose rm"
+                sh "docker compose up -d"
             }
         }
     }
