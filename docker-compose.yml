@@ -5,14 +5,12 @@ services:
     build:
       context: .
       dockerfile: "CustomerApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
     ports:
       - 8000:80
   orderapi:
     build:
       context: .
       dockerfile: "OrderApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-orderapi:$BUILD_NUMBER
     ports:
       - 8001:80
     depends_on:
@@ -22,18 +20,17 @@ services:
     build:
       context: .
       dockerfile: "ProductApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-productapi:$BUILD_NUMBER
     ports:
       - 8002:80
   emailservice:
     build:
       context: .
       dockerfile: "EmailService/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-emailservice:$BUILD_NUMBER
     ports:
       - 8003:80
     depends_on:
       - customerapi
+      - featurehub
 
   seq:
     image: datalust/seq
@@ -55,6 +52,13 @@ services:
       - MYSQL_PASS=zipkin
     depends_on:
       - zipkin-storage
+  featurehub:
+    image: featurehub/party-server:latest
+    restart: always
+    volumes:
+      - featurehub-h2-data:/db
+    ports:
+      - 8085:8085
 
   zipkin-storage:
     image: openzipkin/zipkin-mysql
@@ -66,3 +70,4 @@ services:
 volumes:
   onlineretailer_partial_data:
   zipkin_data:
+  featurehub-h2-data:

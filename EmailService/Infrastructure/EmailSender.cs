@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using EmailService.Models;
 using FeatureHubSDK;
 using MailKit.Net.Smtp;
+using Microsoft.FeatureManagement;
 using MimeKit;
 using Monitoring;
 using Org.BouncyCastle.Bcpg.OpenPgp;
@@ -20,12 +21,18 @@ namespace EmailService.Infrastructure
 
         public async Task SendEmail(Message message)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered SendEmail to prepare email for sending");
-            var emailMessage = await CreateEmailMessage(message);
+            var config = new EdgeFeatureHubConfig("http://featurehub:8085", "316272c6-8209-4388-b46d-489edf263f3f/laAFIB2PpdWNHwPv1hmZE7VZNbJR5IzrTNOMfYFs");
+            var fh = await config.NewContext().Build();
+            if (fh["SendEmailFeature"].IsEnabled)
+            {
+                using var activity = MonitorService.ActivitySource.StartActivity();
+                MonitorService.Log.Here().Debug("Entered SendEmail to prepare email for sending");
+                var emailMessage = await CreateEmailMessage(message);
                 Console.WriteLine(message.To);
                 await Send(emailMessage);
             }
+            else MonitorService.Log.Here().Debug("Didnt send email because Feature is disabled.");
+        }
 
         private async Task<MimeMessage> CreateEmailMessage(Message message)
         {
