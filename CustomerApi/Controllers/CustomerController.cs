@@ -45,6 +45,7 @@ namespace CustomerApi.Controllers
         {
             try
             {
+                //pipeline
                 var item = await _repository.Get(id);
 
                 return _converter.Convert(item);
