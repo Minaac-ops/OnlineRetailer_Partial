@@ -6,16 +6,17 @@ services:
       context: .
       dockerfile: "CustomerApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
+    ports:
+      - 8000:80
 
   customerapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "customerapi", "-app-port", "8000", "-components-path", "/components"]
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
       - "./components/:/components"
     depends_on:
       - customerapi
-    ports:
-      - 8000:80
+    network_mode: "service:customerapi"
 
   orderapi:
     build:
@@ -24,16 +25,17 @@ services:
     image: annechristensen1995/onlineretailer_partial-orderapi:$BUILD_NUMBER
     depends_on:
       - seq
+    ports:
+      - 8001:80
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "orderapi", "-app-port", "8001", "-components-path", "/components"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
       - "./components/:/components"
     depends_on:
       - orderapi
-    ports:
-      - 8001:80
+    network_mode: "service:orderapi"
   
   productapi:
     build:
