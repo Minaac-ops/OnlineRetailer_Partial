@@ -80,7 +80,7 @@ services:
       - zipkin_data:/mysql/data
 
   redis:
-    image: "redis:alpine"
+    image: "docker.io/redis:6"
     hostname: redisstate
     ports:
       - 6379:6379
