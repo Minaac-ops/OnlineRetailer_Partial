@@ -12,6 +12,8 @@ using OrderApi.Models;
 using Shared;
 using Dapr;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Certificate;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -62,12 +64,14 @@ builder.Services.AddControllers().AddDapr();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddAuthentication(CertificateAuthenticationDefaults.AuthenticationScheme).AddCertificate();
 
 var app = builder.Build();
 
 app.UseCloudEvents();
 app.MapControllers();
 app.MapSubscribeHandler();
+app.UseAuthentication();
 
 // Configure the HTTP request pipeline.
 
