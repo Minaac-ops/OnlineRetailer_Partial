@@ -7,11 +7,11 @@ services:
       dockerfile: "CustomerApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
     ports:
-      - 8000:80
+      - 8000:8000
 
   customerapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
     volumes:
       - "./components/:/components"
     depends_on:
@@ -26,11 +26,11 @@ services:
     depends_on:
       - seq
     ports:
-      - 8001:80
+      - 8001:8001
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
     volumes:
       - "./components/:/components"
     depends_on:
@@ -78,12 +78,6 @@ services:
       - 3306:3306
     volumes:
       - zipkin_data:/mysql/data
-
-  redis:
-    image: "redis:alpine"
-    hostname: redisstate
-    ports:
-      - 6379:6379
 
 volumes:
   onlineretailer_partial_data:
