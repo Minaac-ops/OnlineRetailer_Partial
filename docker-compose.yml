@@ -79,6 +79,12 @@ services:
     volumes:
       - zipkin_data:/mysql/data
 
+  redis:
+    image: "redis:alpine"
+    hostname: redisstate
+    ports:
+      - 6379:6379
+
 volumes:
   onlineretailer_partial_data:
   zipkin_data:
