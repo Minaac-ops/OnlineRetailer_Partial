@@ -82,7 +82,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
