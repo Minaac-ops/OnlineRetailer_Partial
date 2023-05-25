@@ -25,7 +25,7 @@ services:
     depends_on:
       - seq
     ports:
-      - 3500:3500
+      - 3500:80
 
   orderapi-dapr:
     image: daprio/daprd:edge
