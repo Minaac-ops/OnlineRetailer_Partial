@@ -6,10 +6,12 @@ services:
       context: .
       dockerfile: "CustomerApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
+    ports:
+      - 8000:8000
 
   customerapi-dapr:
-    image: daprio/daprd:edge
-    command: ["dapr run", "--app-id", "customerapi", "--resource-path", "/components", "--app-port", "8000", "--", "dotnet run"]
+    image: daprio/daprd
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
       - "../components/:/components"
     depends_on:
@@ -21,14 +23,16 @@ services:
       context: .
       dockerfile: "OrderApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-orderapi:$BUILD_NUMBER
+    ports:
+      - 8001:8001
     depends_on:
       - seq
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["dapr run", "--app-id", "customerapi", "--resource-path", "/components", "--app-port", "8001", "--", "dotnet run"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
-      - "./components/:/components"
+      - "../components/:/components"
     depends_on:
       - orderapi
     network_mode: service:orderapi
@@ -76,7 +80,7 @@ services:
       - zipkin_data:/mysql/data
 
   redis:
-    image: "docker.io/redis:6"
+    image: "redis:alpine"
     hostname: redisstate
     ports:
       - 6379:6379
