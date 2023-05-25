@@ -10,13 +10,6 @@ using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
 using Shared;
-using Dapr;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Certificate;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Base URL for the product service when the solution is executed using docker-compose.
@@ -70,7 +63,6 @@ var app = builder.Build();
 app.UseCloudEvents();
 app.MapControllers();
 app.MapSubscribeHandler();
-app.UseAuthentication();
 
 // Configure the HTTP request pipeline.
 
@@ -85,7 +77,7 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 

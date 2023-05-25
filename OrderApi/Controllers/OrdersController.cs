@@ -163,11 +163,7 @@ namespace OrderApi.Controllers
         {
             try
             {
-                var order = await repository.Get(id);
-                order.Status = OrderDto.OrderStatus.Paid;
-                await repository.Edit(order);
-                
-                await _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
+                Console.WriteLine("hit it");
             }
             catch (Exception e)
             {
