@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Dapr.Client;
 using EasyNetQ;
 using Monitoring;
 using OpenTelemetry;
@@ -27,6 +28,7 @@ namespace OrderApi.Infrastructure
         public async Task PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
             using var activity = MonitorService.ActivitySource.StartActivity();
+            
             MonitorService.Log.Here().Debug("Entered PublishOrderCreatedMessage to publish OrderCreatedMessage");
             var messageCustomer = new OrderCreatedMessage
             { 
@@ -41,21 +43,29 @@ namespace OrderApi.Infrastructure
                 OrderId = orderId,
                 OrderLines = orderLines,
             };
-            
+
+            //await client.PublishEventAsync("orderpubsub", "checkCredit", messageCustomer);
             await bus.PubSub.PublishAsync(messageCustomer, "checkCredit");
             MonitorService.Log.Here().Debug("Published OrderCreatedMessage to CustomerApi");
+            Console.WriteLine("Published data: "+ messageCustomer);
             
             await bus.PubSub.PublishAsync(messageProduct, "checkProductAvailability");
             MonitorService.Log.Here().Debug("Published OrderCreatedMessage to ProductApi");
+            Console.WriteLine("Published data: " + messageProduct);
         }
 
         public async Task CreditStandingChangedMessage(int orderResultCustomerId)
         {
+            using var daprClient = new DaprClientBuilder().Build();
             var message = new CreditStandingChangedMessage
             {
-                CustomerId = orderResultCustomerId
+                CustomerId = 1
             };
-            await bus.PubSub.PublishAsync(message, "paid");
+
+            await daprClient.PublishEventAsync<CreditStandingChangedMessage>("orderpubsub", "newOrder", message);
+
+            Console.WriteLine("Published daprmessage: " + message);
+            //await bus.PubSub.PublishAsync(message, "paid");
         }
 
         public async Task OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)

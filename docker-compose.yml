@@ -8,6 +8,16 @@ services:
     image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
     ports:
       - 8000:80
+
+  customerapi-dapr:
+    image: daprio/daprd:edge
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - customerapi
+    network_mode: service:customerapi
+
   orderapi:
     build:
       context: .
@@ -18,6 +28,16 @@ services:
     depends_on:
       - seq
       - zipkin
+
+  orderapi-dapr:
+    image: daprio/daprd:edge
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - orderapi
+    network_mode: service:orderapi
+  
   productapi:
     build:
       context: .

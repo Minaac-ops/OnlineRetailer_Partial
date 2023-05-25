@@ -113,7 +113,7 @@ namespace OrderApi.Controllers
                 bool isCompleted = false;
                 while (!isCompleted)
                 {
-                    Thread.Sleep(5000);
+                    Thread.Sleep(2000);
                     var tentativeOrder = await repository.Get(newOrder.Id);
                     if (tentativeOrder.Status == OrderDto.OrderStatus.Completed)
                     {

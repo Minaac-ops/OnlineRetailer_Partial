@@ -10,6 +10,10 @@ using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
 using Shared;
+using Dapr;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,12 +58,16 @@ builder.Services.AddTransient<IDbInitializer, DbInitializer>();
 builder.Services.AddSingleton<IMessagePublisher>(new
     MessagePublisher(cloudAMQPConnectionString));
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddDapr();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseCloudEvents();
+app.MapControllers();
+app.MapSubscribeHandler();
 
 // Configure the HTTP request pipeline.
 

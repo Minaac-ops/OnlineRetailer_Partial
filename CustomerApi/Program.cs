@@ -3,12 +3,11 @@ using System.Threading.Tasks;
 using CustomerApi.Data;
 using CustomerApi.Infrastructure;
 using CustomerApi.Models;
+using Dapr;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Monitoring;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,13 +23,16 @@ builder.Services.AddScoped<IRepository<Customer>, CustomerRepository>();
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();
 
-
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddDapr();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<IConverter<Customer, CustomerDto>, CustomerConverter>();
 var app = builder.Build();
+
+app.UseCloudEvents();
+app.MapControllers();
+app.MapSubscribeHandler();
 
 // Configure the HTTP request pipeline.
 
