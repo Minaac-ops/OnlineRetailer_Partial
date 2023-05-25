@@ -27,7 +27,6 @@ services:
       - 8001:80
     depends_on:
       - seq
-      - zipkin
 
   orderapi-dapr:
     image: daprio/daprd:edge
