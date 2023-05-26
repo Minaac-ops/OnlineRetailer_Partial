@@ -14,7 +14,7 @@ services:
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "--components-path", "/components", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components/pubsub.yaml", "-log-level", "debug"]
     volumes:
       - "./components/:/components"
     depends_on:
@@ -32,7 +32,7 @@ services:
 
   customerapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components/pubsub.yaml", "-log-level", "debug"]
     volumes:
       - "./components/:/components"
     depends_on:
