@@ -15,11 +15,6 @@ namespace OrderApi.Infrastructure
     {
         IBus bus;
 
-        public MessagePublisher(string connectionString)
-        {
-            bus = RabbitHutch.CreateBus(connectionString);
-        }
-
         public void Dispose()
         {
             bus.Dispose();
@@ -28,7 +23,7 @@ namespace OrderApi.Infrastructure
         public async Task PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
             using var activity = MonitorService.ActivitySource.StartActivity();
-            
+            using var daprClient = new DaprClientBuilder().Build();
             MonitorService.Log.Here().Debug("Entered PublishOrderCreatedMessage to publish OrderCreatedMessage");
             var messageCustomer = new OrderCreatedMessage
             { 
@@ -43,29 +38,29 @@ namespace OrderApi.Infrastructure
                 OrderId = orderId,
                 OrderLines = orderLines,
             };
-
-            //await client.PublishEventAsync("orderpubsub", "checkCredit", messageCustomer);
-            await bus.PubSub.PublishAsync(messageCustomer, "checkCredit");
-            MonitorService.Log.Here().Debug("Published OrderCreatedMessage to CustomerApi");
-            Console.WriteLine("Published data: "+ messageCustomer);
             
-            await bus.PubSub.PublishAsync(messageProduct, "checkProductAvailability");
-            MonitorService.Log.Here().Debug("Published OrderCreatedMessage to ProductApi");
-            Console.WriteLine("Published data: " + messageProduct);
+            //await bus.PubSub.PublishAsync(messageCustomer, "checkCredit");
+            await daprClient.PublishEventAsync("orderpubsub", "checkCredit", messageCustomer);
+            MonitorService.Log.Here().Debug("Published DaprOrderCreatedMessage to CustomerApi");
+            Console.WriteLine("Published DaprData: "+ messageCustomer.CustomerId);
+            
+            //await bus.PubSub.PublishAsync(messageProduct, "checkProductAvailability");
+            await daprClient.PublishEventAsync("orderpubsub", "checkProductAvailability", messageProduct);
+            MonitorService.Log.Here().Debug("Published DaprOrderCreatedMessage to ProductApi");
+            Console.WriteLine("Published Daprdata: " + messageProduct.OrderLines);
         }
 
-        public async Task CreditStandingChangedMessage(int orderResultCustomerId)
+        public async Task CreditStandingChangedMessage(int customerId)
         {
             using var daprClient = new DaprClientBuilder().Build();
             var message = new CreditStandingChangedMessage
             {
-                CustomerId = 1
+                CustomerId = customerId
             };
 
-            await daprClient.PublishEventAsync<CreditStandingChangedMessage>("orderpubsub", "newOrder", message);
+            await daprClient.PublishEventAsync<CreditStandingChangedMessage>("orderpubsub", "creditChange", message);
 
-            Console.WriteLine("Published daprmessage: " + message);
-            //await bus.PubSub.PublishAsync(message, "paid");
+            Console.WriteLine("CreditStatusChangeMessage: PublishedDapr customerId: " + message.CustomerId);
         }
 
         public async Task OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
@@ -85,6 +80,7 @@ namespace OrderApi.Infrastructure
         public async Task PublishOrderAccepted(int orderCustomerId, int orderId)
         {
             using var activity = MonitorService.ActivitySource.StartActivity();
+            using var daprClient = new DaprClientBuilder().Build();
             MonitorService.Log.Here().Debug("PublishOrderAccepted before publish");
             var message = new EmailMessage
             {
@@ -102,6 +98,8 @@ namespace OrderApi.Infrastructure
             });
 
             await bus.PubSub.PublishAsync(message,"OrderConfirmed");
+            //await daprClient.PublishEventAsync("orderpubsub", "OrderConfirmed", message);
+            
             MonitorService.Log.Here().Debug("PublishOrderAccepted after publish");
         }
 

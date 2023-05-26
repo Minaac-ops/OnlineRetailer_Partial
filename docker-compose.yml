@@ -1,27 +1,12 @@
 version: '3.9'
 
 services:
-  customerapi:
-    build:
-      context: .
-      dockerfile: "CustomerApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
-
-  customerapi-dapr:
-    image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "customerapi", "-app-port", "8000", "-components-path", "/components", "-log-level", "debug"]
-    volumes:
-      - "./components/:/components"
-    depends_on:
-      - customerapi
-    ports:
-      - 8000:80
-
+# orderapi + dapr sidecar
   orderapi:
     build:
       context: .
       dockerfile: "OrderApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-orderapi:$BUILD_NUMBER
+    image: onlineretailer_partial-orderapi
     depends_on:
       - seq
     ports:
@@ -29,24 +14,43 @@ services:
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
       - "./components/:/components"
     depends_on:
       - orderapi
+    network_mode: "service:orderapi"
+
+#customerapi + dapr sidecar
+  customerapi:
+    build:
+      context: .
+      dockerfile: "CustomerApi/Dockerfile"
+    image: onlineretailer_partial-customerapi
+    ports:
+      - 3501:80
+
+  customerapi-dapr:
+    image: daprio/daprd:edge
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - customerapi
+    network_mode: "service:customerapi"
   
   productapi:
     build:
       context: .
       dockerfile: "ProductApi/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-productapi:$BUILD_NUMBER
+    image: onlineretailer_partial-productapi
     ports:
       - 8002:80
   emailservice:
     build:
       context: .
       dockerfile: "EmailService/Dockerfile"
-    image: annechristensen1995/onlineretailer_partial-emailservice:$BUILD_NUMBER
+    image: onlineretailer_partial-emailservice
     ports:
       - 8003:80
     depends_on:

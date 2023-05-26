@@ -163,7 +163,13 @@ namespace OrderApi.Controllers
         {
             try
             {
-                Console.WriteLine("hit it");
+                var order = await repository.Get(id);
+                order.Status = OrderDto.OrderStatus.Paid;
+                await repository.Edit(order);
+                Console.WriteLine(order.Status);
+                Console.WriteLine("PAy controller hit " + order.CustomerId);
+                
+                await _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
             }
             catch (Exception e)
             {

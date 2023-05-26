@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using CustomerApi.Data;
-using CustomerApi.Infrastructure;
 using CustomerApi.Models;
 using Dapr;
 using System.Text.Json.Serialization;
@@ -11,8 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
-string cloudAMQPConnectionString =
-    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
+//string cloudAMQPConnectionString =
+//    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
 // Add services to the container.
 
 builder.Services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase("CustomersDb"));
@@ -48,10 +47,6 @@ using (var scope = app.Services.CreateScope())
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 //app.UseHttpsRedirection();
-
-Task.Factory.StartNew(() =>
-    new MessageListener(app.Services, cloudAMQPConnectionString).Start());
-
 
 app.UseAuthorization();
 

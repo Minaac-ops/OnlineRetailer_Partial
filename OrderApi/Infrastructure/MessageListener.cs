@@ -15,12 +15,6 @@ namespace OrderApi.Infrastructure
         string connectionString;
         IBus _bus;
 
-        public MessageListener(IServiceProvider provider, string connectionString)
-        {
-            _provider = provider;
-            this.connectionString = connectionString;
-        }
-
         public async Task Start()
         {
             using (_bus = RabbitHutch.CreateBus(connectionString))

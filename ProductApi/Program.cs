@@ -27,12 +27,16 @@ builder.Services.AddTransient<IDbInitializer, DbInitializer>();
 // Register ProductConverter for dependency injection
 builder.Services.AddSingleton<IConverter<Product, ProductDto>, ProductConvert>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddDapr();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+app.UseCloudEvents();
+app.MapControllers();
+app.MapSubscribeHandler();
 
 // Configure the HTTP request pipeline.
 

@@ -29,7 +29,7 @@ namespace OrderApi.Data
 
             List<Order> orders = new List<Order>
             {
-                new Order { Date = DateTime.Today, OrderLines = orderLines,Status = OrderDto.OrderStatus.Completed}
+                new Order { Date = DateTime.Today, OrderLines = orderLines,Status = OrderDto.OrderStatus.Completed, CustomerId = 1}
             };
 
             await context.Orders.AddRangeAsync(orders);

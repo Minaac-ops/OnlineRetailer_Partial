@@ -2,9 +2,7 @@ using System;
 using System.Threading.Tasks;
 using CustomerApi.Data;
 using CustomerApi.Models;
-using Dapr;
 using Microsoft.AspNetCore.Mvc;
-using NuGet.Protocol.Plugins;
 using Shared;
 
 namespace CustomerApi.Controllers
@@ -70,14 +68,6 @@ namespace CustomerApi.Controllers
             {
                 throw new Exception("Customer with id " + id + " could not be updated due to error " + e.Message);
             }
-        }
-
-        [Topic("orderpubsub", "newOrder")]
-        [HttpPost("/orders")]
-        public async Task HandleCreditStatusChanged([FromBody] CreditStandingChangedMessage creditStandingChangedMessage)
-        {
-            Console.WriteLine("Message received");
-            Console.WriteLine("DaprMessageReceived" + creditStandingChangedMessage.CustomerId);
         }
     }
 }

@@ -19,8 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // RabbitMQ connection string (I use CloudAMQP as a RabbitMQ server).
 // Remember to replace this connectionstring with your own.
-string cloudAMQPConnectionString =
-    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
+//string cloudAMQPConnectionString =
+//    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
 
 // Use this connection string if you want to run RabbitMQ server as a container
 // (see docker-compose.yml)
@@ -51,7 +51,7 @@ builder.Services.AddSingleton<IConverter<Order, OrderDto>, OrderConverter>();
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();
 // Register MessagePublisher (a messaging gateway) for dependency injection
 builder.Services.AddSingleton<IMessagePublisher>(new
-    MessagePublisher(cloudAMQPConnectionString));
+    MessagePublisher());
 
 builder.Services.AddControllers().AddDapr();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -79,7 +79,7 @@ app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(
 
 //app.UseHttpsRedirection();
 
-Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
+//Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
 app.UseAuthorization();
 
