@@ -10,7 +10,7 @@ services:
     depends_on:
       - seq
     ports:
-      - 3500:80
+      - 8000:8000
 
   orderapi-dapr:
     image: daprio/daprd:edge
@@ -28,7 +28,7 @@ services:
       dockerfile: "CustomerApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
     ports:
-      - 3501:80
+      - 8001:8001
 
   customerapi-dapr:
     image: daprio/daprd:edge
@@ -45,14 +45,14 @@ services:
       dockerfile: "ProductApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-productapi:$BUILD_NUMBER
     ports:
-      - 8002:80
+      - 8002:8002
   emailservice:
     build:
       context: .
       dockerfile: "EmailService/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-emailservice:$BUILD_NUMBER
     ports:
-      - 8003:80
+      - 8003:8003
     depends_on:
       - customerapi
       - featurehub
