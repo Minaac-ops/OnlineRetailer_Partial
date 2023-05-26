@@ -10,7 +10,7 @@ services:
     depends_on:
       - seq
     ports:
-      - 8000:8000
+      - 8000:80
 
   orderapi-dapr:
     image: daprio/daprd:edge
@@ -28,7 +28,7 @@ services:
       dockerfile: "CustomerApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-customerapi:$BUILD_NUMBER
     ports:
-      - 8001:8001
+      - 8001:80
 
   customerapi-dapr:
     image: daprio/daprd:edge
@@ -45,7 +45,7 @@ services:
       dockerfile: "ProductApi/Dockerfile"
     image: annechristensen1995/onlineretailer_partial-productapi:$BUILD_NUMBER
     ports:
-      - 8002:8002
+      - 8002:80
   emailservice:
     build:
       context: .
@@ -72,7 +72,7 @@ services:
     volumes:
       - featurehub-h2-data:/db
     ports:
-      - 8085:8085
+      - 8085:80
 
   zipkin-storage:
     image: openzipkin/zipkin-mysql
