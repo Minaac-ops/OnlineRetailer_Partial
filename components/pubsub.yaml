@@ -1,15 +1,11 @@
 apiVersion: dapr.io/v1alpha1
 kind: Component
 metadata:
-  name: orderpubsub
+  name: redisstore
 spec:
-  type: pubsub.rabbitmq
-  version: v1
+  type: state.redis
   metadata:
-  - name: connectionString
-    value: amqps://djgafrdt:N069t12xrumLFnbNr-ZRoCZFtvKQGe7D@sparrow.rmq.cloudamqp.com/djgafrdt
-  - name: protocol
-    value: amqps
-scopes:
-  - orderapi
-  - customerapi
+  - name: redisHost
+    value: localhost:6379
+  - name: redisPassword
+    value: ""
