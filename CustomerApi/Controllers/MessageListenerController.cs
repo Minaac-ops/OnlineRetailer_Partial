@@ -24,7 +24,7 @@ namespace CustomerApi.Controllers
         [HttpPost("/creditChange")]
         public async Task HandleCreditStatusChanged([FromBody] CreditStandingChangedMessage msg)
         {
-            Console.WriteLine("DaprMessageReceived" + msg.CustomerId);
+            Console.WriteLine("CustomerController received " + msg.CustomerId);
             var customer = await _repository.Get(msg.CustomerId);
             customer.CreditStanding = true;
             await _repository.Edit(customer.Id, customer);
@@ -34,9 +34,9 @@ namespace CustomerApi.Controllers
         [HttpPost("/checkCredit")]
         public async Task HandleCheckCreditStanding([FromBody] OrderCreatedMessage msg)
         {
-            Console.WriteLine("Received message: " + msg.CustomerId);
+            Console.WriteLine("CUSTOMERLISTENER RECEIVED DAPRMESSAGE. CUSTOMERID: " + msg.CustomerId + " CREATEORDER orderId " + msg.OrderId);
             var customer = await _repository.Get(msg.CustomerId);
-            Console.WriteLine("customer creditStanding: " + customer.CreditStanding);
+            Console.WriteLine("CUSTOMERLISTENER checking creditStanding. CREATEORDER " + customer.CreditStanding);
             using var daprClient = new DaprClientBuilder().Build();
             if (customer.CreditStanding)
             {
@@ -47,7 +47,7 @@ namespace CustomerApi.Controllers
                     CustomerId = msg.CustomerId
                 };
                 await daprClient.PublishEventAsync("orderpubsub", "orderAccepted", orderAcceptedMessage);
-                Console.WriteLine("CustomerListener: PublishedOrderAccepted");
+                Console.WriteLine("CUSTOMERLISTENER. PUBLISHED ORDERACCEPTED with OrderId " + orderAcceptedMessage.OrderId);
             } else
             {
                 var orderRejectedMessage = new OrderRejectedMessage
@@ -57,7 +57,7 @@ namespace CustomerApi.Controllers
                 
                 //await bus.PubSub.PublishAsync(orderRejectedMessage);
                 await daprClient.PublishEventAsync("orderpubsub", "orderRejected", orderRejectedMessage);
-                Console.WriteLine("CustomerListener: PublishedOrderRejected");
+                Console.WriteLine("CUSTOMERLISTENER PUBLISHED ORDERREJECTED WITH ORDERID: " + orderRejectedMessage.OrderId);
             }
             customer.CreditStanding = false;
             await _repository.Edit(customer.Id,customer);

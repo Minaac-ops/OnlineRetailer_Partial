@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using ProductApi.Models;
-using Shared;
 
 namespace ProductApi.Data
 {

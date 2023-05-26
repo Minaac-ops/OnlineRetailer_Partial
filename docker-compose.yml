@@ -39,6 +39,7 @@ services:
       - customerapi
     network_mode: "service:customerapi"
   
+  #productapi + dapr sidecar
   productapi:
     build:
       context: .
@@ -46,6 +47,17 @@ services:
     image: onlineretailer_partial-productapi
     ports:
       - 8002:80
+
+  product-dapr:
+    image: daprio/daprd:edge
+    command: ["./daprd", "-app-id", "productapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - productapi
+    network_mode: "service:productapi"
+
+  #emailapi + dapr sidecar
   emailservice:
     build:
       context: .
@@ -56,6 +68,15 @@ services:
     depends_on:
       - customerapi
       - featurehub
+
+  email-dapr:
+    image: daprio/daprd:edge
+    command: ["./daprd", "-app-id", "emailservice", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
+    volumes:
+      - "./components/:/components"
+    depends_on:
+      - productapi
+    network_mode: "service:emailservice"
 
   seq:
     image: datalust/seq

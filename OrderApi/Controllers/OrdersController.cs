@@ -126,7 +126,7 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
-                await _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
+                //await _messagePublisher.PublishOrderCancelled(order.CustomerId,order.Id);
                 throw new Exception(e.Message);
             }
         }

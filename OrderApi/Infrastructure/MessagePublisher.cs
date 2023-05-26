@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Dapr.Client;
-using EasyNetQ;
 using Monitoring;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
@@ -11,15 +10,8 @@ using Shared;
 
 namespace OrderApi.Infrastructure
 {
-    public class MessagePublisher : IMessagePublisher, IDisposable
+    public class MessagePublisher : IMessagePublisher
     {
-        IBus bus;
-
-        public void Dispose()
-        {
-            bus.Dispose();
-        }
-
         public async Task PublishOrderCreatedMessage(int? customerId, int orderId, IList<OrderLine> orderLines)
         {
             using var activity = MonitorService.ActivitySource.StartActivity();
@@ -39,15 +31,17 @@ namespace OrderApi.Infrastructure
                 OrderLines = orderLines,
             };
             
-            //await bus.PubSub.PublishAsync(messageCustomer, "checkCredit");
             await daprClient.PublishEventAsync("orderpubsub", "checkCredit", messageCustomer);
             MonitorService.Log.Here().Debug("Published DaprOrderCreatedMessage to CustomerApi");
-            Console.WriteLine("Published DaprData: "+ messageCustomer.CustomerId);
+            Console.WriteLine("ORDER PUBLISHER PUBLISHED DAPRMESSAGE. customerid "+ messageCustomer.CustomerId+". orderid: " + messageCustomer.OrderId);
             
-            //await bus.PubSub.PublishAsync(messageProduct, "checkProductAvailability");
             await daprClient.PublishEventAsync("orderpubsub", "checkProductAvailability", messageProduct);
             MonitorService.Log.Here().Debug("Published DaprOrderCreatedMessage to ProductApi");
-            Console.WriteLine("Published Daprdata: " + messageProduct.OrderLines);
+            Console.WriteLine("ORDER PUBLISHER PUBLISHED DAPRMESSAGE. Orderid: " + messageProduct.OrderId + "products: ");
+            foreach (var VARIABLE in messageProduct.OrderLines)
+            {
+                Console.WriteLine(VARIABLE.ProductId);
+            }
         }
 
         public async Task CreditStandingChangedMessage(int customerId)
@@ -65,7 +59,9 @@ namespace OrderApi.Infrastructure
 
         public async Task OrderStatusChangedMessage(int id,IList<OrderLine> orderLines, string topic)
         {
+            using var daprClient = new DaprClientBuilder().Build();
             using var activity = MonitorService.ActivitySource.StartActivity();
+            
             MonitorService.Log.Here().Debug("OrderStatusChangedMessage before publish");
             var message = new OrderStatusChangedMessage
             {
@@ -73,7 +69,7 @@ namespace OrderApi.Infrastructure
                 OrderLine = orderLines
             };
             
-            await bus.PubSub.PublishAsync(message, $"{topic}");
+            await daprClient.PublishEventAsync<OrderStatusChangedMessage>("orderpubsub", $"{topic}", message);
             MonitorService.Log.Here().Debug("OrderStatusChangedMessage after publish");
         }
 
@@ -97,14 +93,15 @@ namespace OrderApi.Infrastructure
                 r.Header.Add(key, value);
             });
 
-            await bus.PubSub.PublishAsync(message,"OrderConfirmed");
-            //await daprClient.PublishEventAsync("orderpubsub", "OrderConfirmed", message);
+            await daprClient.PublishEventAsync("orderpubsub", "OrderConfirmed", message);
+            Console.WriteLine("ORDERPUBLISHER PUBLISHING ORDER CONFIRMED IN RELATIONS TO ORDERCREATED FINISHED PROCESSING. " + message.CustomerId);
             
             MonitorService.Log.Here().Debug("PublishOrderAccepted after publish");
         }
 
         public async Task PublishOrderCancelled(int orderCustomerId, int orderId)
         {
+            using var daprClient = new DaprClientBuilder().Build();
             using var activity = MonitorService.ActivitySource.StartActivity();
             MonitorService.Log.Here().Debug("PublishOrderCancelled before publish");
             
@@ -123,12 +120,13 @@ namespace OrderApi.Infrastructure
                 r.Header.Add(key, value);
             });
 
-            await bus.PubSub.PublishAsync(message, "Cancelled");
+            await daprClient.PublishEventAsync("orderpubsub", "Cancelled", message);
             MonitorService.Log.Here().Debug("PublishOrderCancelled after publish");
         }
 
         public async Task PublishOrderShippedEmail(int customerId, int orderId)
         {
+            using var daprClient = new DaprClientBuilder().Build();
             using var activity = MonitorService.ActivitySource.StartActivity();
             MonitorService.Log.Here().Debug("PublishOrderShippedEmail before handle");
             var message = new EmailMessage
@@ -146,7 +144,7 @@ namespace OrderApi.Infrastructure
                 r.Header.Add(key, value);
             });
             
-            await bus.PubSub.PublishAsync(message, "Shipped");
+            await daprClient.PublishEventAsync("orderpubsub", "Shipped", message);
             MonitorService.Log.Here().Debug("PublishOrderShippedEmail after  handle");
         }
     }

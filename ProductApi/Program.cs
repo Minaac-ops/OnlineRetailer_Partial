@@ -1,19 +1,12 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using ProductApi.Data;
-using ProductApi.Infrastructure;
 using ProductApi.Models;
 using Shared;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-string cloudAMQPConnectionString =
-    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
 // Add services to the container.
 
 builder.Services.AddDbContext<ProductApiContext>(opt => opt.UseInMemoryDatabase("ProductsDb"));
@@ -51,11 +44,6 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
-
-
-Console.WriteLine("MessageListener should start here");
-Task.Factory.StartNew(() =>
-    new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
 
 app.UseAuthorization();

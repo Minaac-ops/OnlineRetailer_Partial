@@ -8,6 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.10.0" />
+        <PackageReference Include="Dapr.AspNetCore" Version="1.10.0" />
+        <PackageReference Include="Dapr.Client" Version="1.10.0" />
         <PackageReference Include="EasyNetQ" Version="7.4.3" />
         <PackageReference Include="FeatureHub.SDK" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.4" />
@@ -16,10 +19,6 @@
         <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
         <PackageReference Include="RestSharp" Version="108.0.3" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Controllers" />
     </ItemGroup>
 
     <ItemGroup>

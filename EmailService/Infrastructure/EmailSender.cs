@@ -3,10 +3,8 @@ using System.Threading.Tasks;
 using EmailService.Models;
 using FeatureHubSDK;
 using MailKit.Net.Smtp;
-using Microsoft.FeatureManagement;
 using MimeKit;
 using Monitoring;
-using Org.BouncyCastle.Bcpg.OpenPgp;
 
 namespace EmailService.Infrastructure
 {

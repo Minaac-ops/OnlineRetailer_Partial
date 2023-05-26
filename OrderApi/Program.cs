@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,21 +9,9 @@ using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
 using Shared;
+
+
 var builder = WebApplication.CreateBuilder(args);
-
-// Base URL for the product service when the solution is executed using docker-compose.
-// The product service (running as a container) listens on this URL for HTTP requests
-// from other services specified in the docker compose file (which in this solution is
-// the order service).
-
-// RabbitMQ connection string (I use CloudAMQP as a RabbitMQ server).
-// Remember to replace this connectionstring with your own.
-//string cloudAMQPConnectionString =
-//    "host=sparrow-01.rmq.cloudamqp.com;virtualHost=dcsrkben;username=dcsrkben;password=btHFI057Mxuj4edjwE9aaG0DPatBSShP";
-
-// Use this connection string if you want to run RabbitMQ server as a container
-// (see docker-compose.yml)
-//string cloudAMQPConnectionString = "host=rabbitmq";
 
 // Telemetry
 builder.Services.AddOpenTelemetry()
@@ -78,8 +65,6 @@ using (var scope = app.Services.CreateScope())
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 //app.UseHttpsRedirection();
-
-//Task.Factory.StartNew(() => new MessageListener(app.Services, cloudAMQPConnectionString).Start());
 
 app.UseAuthorization();
 
