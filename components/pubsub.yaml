@@ -4,9 +4,10 @@ metadata:
   name: orderpubsub
 spec:
   type: state.redis
+  version: v1
   metadata:
   - name: redisHost
-    value: localhost:6379
+    value: redisstate:6379
   - name: redisPassword
     value: ""
   pubsubname: orderpubsub
