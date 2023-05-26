@@ -3,11 +3,10 @@ kind: Component
 metadata:
   name: orderpubsub
 spec:
-  type: state.redis
+  type: pubsub.redis
   version: v1
   metadata:
   - name: redisHost
     value: redisstate:6379
   - name: redisPassword
     value: ""
-  pubsubname: orderpubsub
