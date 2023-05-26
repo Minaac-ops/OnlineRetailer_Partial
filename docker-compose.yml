@@ -14,9 +14,9 @@ services:
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components/pubsub.yaml", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
     volumes:
-      - "./components/:/components"
+      - "components/:/components"
     depends_on:
       - orderapi
     network_mode: "service:orderapi"
@@ -32,9 +32,9 @@ services:
 
   customerapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components/pubsub.yaml", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
     volumes:
-      - "./components/:/components"
+      - "components/:/components"
     depends_on:
       - customerapi
     network_mode: "service:customerapi"
@@ -85,3 +85,4 @@ volumes:
   onlineretailer_partial_data:
   zipkin_data:
   featurehub-h2-data:
+  components:
