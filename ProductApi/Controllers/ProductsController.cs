@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Monitoring;
 using ProductApi.Data;
 using ProductApi.Models;
 using Shared;
@@ -24,8 +25,9 @@ namespace ProductApi.Controllers
 
         // GET products
         [HttpGet]
-        public async Task<IEnumerable<ProductDto>> Get()
+        public async Task<IEnumerable<ProductDto>> GetAll()
         {
+            MonitorService.Log.Here().Debug("ProductController: Get");
             try
             {
                 var products = await _repository.GetAll();
@@ -41,6 +43,7 @@ namespace ProductApi.Controllers
         [HttpGet("{id}", Name = "GetProduct")]
         public async Task<ProductDto> Get(int id)
         {
+            MonitorService.Log.Here().Debug("ProductController: Get");
             try
             {
                 var item = await _repository.Get(id);
@@ -56,6 +59,7 @@ namespace ProductApi.Controllers
         [HttpPost]
         public async Task<ProductDto> Post([FromBody] ProductDto productDto)
         {
+            MonitorService.Log.Here().Debug("ProductController: Post");
             try
             {
                 if (productDto == null) throw new Exception("Fill out product details.");
@@ -74,6 +78,7 @@ namespace ProductApi.Controllers
         [HttpPut("{id}")]
         public async Task Put(int id, [FromBody] ProductDto productDto)
         {
+            MonitorService.Log.Here().Debug("ProductController: Put");
             try
             {
                 if (productDto == null || productDto.Id != id)

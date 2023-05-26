@@ -19,14 +19,15 @@ namespace CustomerApi.Data
 
         async Task<Customer> IRepository<Customer>.Get(int? id)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("CustomerRepository: Get");
             var customer = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
-            Console.WriteLine(customer.CreditStanding);
             return customer;
         }
 
         async Task<IEnumerable<Customer>> IRepository<Customer>.GetAll()
         {
+            
+            MonitorService.Log.Here().Debug("CustomerRepository: GetAll");
             var select = await db.Customers.Select(customer => new Customer()
             {
                 Id = customer.Id,
@@ -46,6 +47,7 @@ namespace CustomerApi.Data
 
         async Task<Customer> IRepository<Customer>.Add(Customer entity)
         {
+            MonitorService.Log.Here().Debug("CustomerRepository: Add");
             var newCustomer = await db.Customers.AddAsync(entity);
             entity.BillingAddress ??= entity.ShippingAddress;
 
@@ -60,7 +62,7 @@ namespace CustomerApi.Data
 
         async Task<Customer> IRepository<Customer>.Edit(int id, Customer entity)
         {
-            MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("CustomerRepository: Edit");
             var customerToUpdate = await db.Customers.FirstOrDefaultAsync(c => c.Id == id);
             customerToUpdate.Email = entity.Email;
             customerToUpdate.BillingAddress = entity.BillingAddress;

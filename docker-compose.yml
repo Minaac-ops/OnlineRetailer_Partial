@@ -10,7 +10,7 @@ services:
     depends_on:
       - seq
     ports:
-      - 3500:80
+      - 8000:80
 
   orderapi-dapr:
     image: daprio/daprd:edge
@@ -28,7 +28,7 @@ services:
       dockerfile: "CustomerApi/Dockerfile"
     image: onlineretailer_partial-customerapi
     ports:
-      - 3501:80
+      - 8001:80
 
   customerapi-dapr:
     image: daprio/daprd:edge
@@ -106,3 +106,4 @@ volumes:
   onlineretailer_partial_data:
   zipkin_data:
   featurehub-h2-data:
+  components:

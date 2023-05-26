@@ -23,32 +23,18 @@ namespace EmailService.Infrastructure
             var fh = await config.NewContext().Build();
             if (fh["SendEmailFeature"].IsEnabled)
             {
-                using var activity = MonitorService.ActivitySource.StartActivity();
-                MonitorService.Log.Here().Debug("Entered SendEmail to prepare email for sending");
+                MonitorService.Log.Here().Debug("EmailSender: SendEmail");
                 var emailMessage = await CreateEmailMessage(message);
                 await Send(emailMessage);
             }
-            else MonitorService.Log.Here().Debug("Didnt send email because Feature is disabled");
+            else MonitorService.Log.Here().Debug("EmailSender: SendEmail is enabled");
         }
 
         private async Task<MimeMessage> CreateEmailMessage(Message message)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered CreateEmailMessage to make the email");
+            MonitorService.Log.Here().Debug("EmailSender: CreateEmailMessage");
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress(message.CustomerName,_emailConfig.From));
-            emailMessage.To.AddRange(message.To);
-            emailMessage.Subject = message.Subject;
-            emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) {Text = message.Content};
-            return emailMessage;
-        }
-        
-        private async Task<MimeMessage> CreateNewsletterMessage(Message message)
-        {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered CreateNewsletterMessage to make the email");
-            var emailMessage = new MimeMessage();
-            emailMessage.From.Add(new MailboxAddress("Newsletter", "Hovedkvartergade 1"));
             emailMessage.To.AddRange(message.To);
             emailMessage.Subject = message.Subject;
             emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Text) {Text = message.Content};
@@ -57,8 +43,7 @@ namespace EmailService.Infrastructure
 
         private async Task Send(MimeMessage mailMessage)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered Send to send email");
+            MonitorService.Log.Here().Debug("EmailSender: Send");
             using (var client = new SmtpClient())
             {
                 try

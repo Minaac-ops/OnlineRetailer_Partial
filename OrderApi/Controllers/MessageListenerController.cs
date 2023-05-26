@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Dapr;
 using Microsoft.AspNetCore.Mvc;
+using Monitoring;
 using OrderApi.Data;
 using OrderApi.Models;
 using Shared;
@@ -23,8 +24,7 @@ namespace OrderApi.Controllers
         [HttpPost("/orderAccepted")]
         public async Task HandleOrderAccepted([FromBody] OrderAcceptedMessage msg)
         {
-            Console.WriteLine("ORDERLISTENER RECEIVED DAPR ORDER ACCEPTED customerId: " + msg.CustomerId
-                +". orderId: "+ msg.OrderId);
+            MonitorService.Log.Here().Debug("OrderApi: MessageListener HandleOrderAccepted");
 
             //Mark order as completed
             var order = await _repository.Get(msg.OrderId);
@@ -38,7 +38,7 @@ namespace OrderApi.Controllers
         [HttpPost("/orderRejected")]
         public async Task HandleOrderRejected([FromBody] OrderRejectedMessage msg)
         {
-            Console.WriteLine("ORDERLISTENER RECEIVED DAPR ORDER RECEJTED orderId: "+ msg.OrderId);
+            MonitorService.Log.Here().Debug("OrderApi: MessageListener HandleOrderRejected");
 
             //Delete order
             var order = await _repository.Get(msg.OrderId);

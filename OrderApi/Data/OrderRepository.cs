@@ -20,7 +20,7 @@ namespace OrderApi.Data
 
         async Task<Order> IRepository<Order>.Add(Order entity)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("OrderRepository Add");
             if (entity == null)
             {
                 throw new Exception("An empty order can't be saved to the database.");
@@ -28,7 +28,7 @@ namespace OrderApi.Data
             entity.Date ??= DateTime.Now;
             
             var newOrder = await db.Orders.AddAsync(entity);
-            Console.WriteLine("OrderRepo: After adding to db "+ entity);
+          
             await db.SaveChangesAsync();;
             return new Order
             {
@@ -42,11 +42,11 @@ namespace OrderApi.Data
 
         async Task IRepository<Order>.Edit(Order entity)
         {
+            MonitorService.Log.Here().Debug("OrderRepository Edit");
             if (entity == null)
             {
                 throw new Exception("Couldn't find customer with id "+entity.Id+" to update.");
             }
-            Console.WriteLine(entity.Status);
             
             db.Entry(entity).State = EntityState.Modified;
             await db.SaveChangesAsync();
@@ -54,7 +54,7 @@ namespace OrderApi.Data
 
         async Task<Order> IRepository<Order>.Get(int id)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("OrderRepository Get");
             var entity = db.Orders
                 .Where(o => o.Id == id)
                 .Select(order => new Order()
@@ -76,8 +76,7 @@ namespace OrderApi.Data
 
         async Task<IEnumerable<Order>> IRepository<Order>.GetAll()
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered method GetAll");
+            MonitorService.Log.Here().Debug("OrderRepository GetAll");
             var select = db.Orders.Select(order => new Order()
             {
                 Id = order.Id,
@@ -97,6 +96,7 @@ namespace OrderApi.Data
 
         async Task IRepository<Order>.Remove(int id)
         {
+            MonitorService.Log.Here().Debug("OrderRepository Remove");
             var order = await db.Orders.FirstOrDefaultAsync(p => p.Id == id);
             db.Orders.Remove(order);
             await db.SaveChangesAsync();
@@ -104,6 +104,7 @@ namespace OrderApi.Data
 
         async Task<IEnumerable<Order>> IRepository<Order>.GetByCustomerId(int customerId)
         {
+            MonitorService.Log.Here().Debug("OrderRepository GetByCustomerId");
             var entities = db.Orders
                 .Where(o => o.CustomerId == customerId)
                 .Select(order => new Order()

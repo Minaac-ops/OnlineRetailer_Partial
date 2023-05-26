@@ -24,7 +24,7 @@ namespace Monitoring
                 .AddConsoleExporter()
                 .AddZipkinExporter(config =>
                 {
-                    config.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
+                    config.Endpoint = new Uri("http://dapr_zipkin:9411/api/v2/spans");
                 })
                 .AddSource(ActivitySource.Name)
                 .AddAspNetCoreInstrumentation()

@@ -33,10 +33,9 @@ namespace OrderApi.Controllers
         [HttpGet]
         public async Task<IEnumerable<OrderDto>> Get()
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
+            MonitorService.Log.Here().Debug("OrdersController Get");
             try
             {
-                MonitorService.Log.Debug("OrdersController Get");
                 var orders = await repository.GetAll();
                 var dtos = orders.Select(o => new OrderDto
                 {
@@ -57,6 +56,7 @@ namespace OrderApi.Controllers
         [HttpGet("getByCustomer/{customerId}")]
         public async Task<IEnumerable<OrderDto>> GetByCustomerId(int customerId)
         {
+            MonitorService.Log.Here().Debug("OrdersController GetByCustomerId");
             try
             {
                 var items = await repository.GetByCustomerId(customerId);
@@ -72,8 +72,7 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(e.Message);
             }
         }
 
@@ -81,6 +80,7 @@ namespace OrderApi.Controllers
         [HttpGet("{id}", Name = "GetOrder")]
         public async Task<OrderDto> Get(int id)
         {
+            MonitorService.Log.Here().Debug("OrderRepository Get");
             try
             {
                 var item = await repository.Get(id);
@@ -96,8 +96,7 @@ namespace OrderApi.Controllers
         [HttpPost]
         public async Task<OrderDto> Post([FromBody] OrderDto order)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("OrdersController POST");
+            MonitorService.Log.Here().Debug("OrdersController Post");
             //Checking if order is null
             if (order == null) throw new Exception("Fill out order details.");
             try
@@ -136,9 +135,8 @@ namespace OrderApi.Controllers
         // with topic set to "shipped".
         [HttpPut("{id}/ship")]
         public async Task Ship(int id)
-        { 
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered OrderController Pay");
+        {
+            MonitorService.Log.Here().Debug("OrderController Ship");
             try
             {
                 var order = await repository.Get(id);
@@ -150,8 +148,7 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(e.Message);
             }
         }
 
@@ -161,20 +158,18 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/pay")]
         public async Task Pay(int id)
         {
+            MonitorService.Log.Here().Debug("OrderController Pay");
             try
             {
                 var order = await repository.Get(id);
                 order.Status = OrderDto.OrderStatus.Paid;
                 await repository.Edit(order);
-                Console.WriteLine(order.Status);
-                Console.WriteLine("PAy controller hit " + order.CustomerId);
                 
                 await _messagePublisher.CreditStandingChangedMessage(order.CustomerId);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(e.Message);
             }
 
             // Add code to implement this method.
@@ -186,8 +181,7 @@ namespace OrderApi.Controllers
         [HttpPut("{id}/cancel")]
         public async Task Cancel(int id)
         {
-            using var activity = MonitorService.ActivitySource.StartActivity();
-            MonitorService.Log.Here().Debug("Entered OrderController Cancel");
+            MonitorService.Log.Here().Debug("OrderController Cancel");
             try
             {
                 var order = await repository.Get(id);
@@ -222,8 +216,7 @@ namespace OrderApi.Controllers
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                throw new Exception(e.Message);
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CustomerApi.Data;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Mvc;
+using Monitoring;
 using Shared;
 
 namespace CustomerApi.Controllers
@@ -23,6 +24,7 @@ namespace CustomerApi.Controllers
         [HttpPost]
         public async Task<CustomerDto> Post([FromBody] CustomerDto customerDto)
         {
+            MonitorService.Log.Here().Debug("CustomerController Post");
             try
             {
                 if (customerDto == null)
@@ -40,9 +42,10 @@ namespace CustomerApi.Controllers
         }
 
         // GET orders/5
-        [HttpGet("{id}", Name = "GetCustomer")]
+        [HttpGet("getCustomer/{id}", Name = "GetCustomer")]
         public async Task<CustomerDto> Get(int id)
         {
+            MonitorService.Log.Here().Debug("CustomerController Get");
             try
             {
                 //pipeline
@@ -59,6 +62,7 @@ namespace CustomerApi.Controllers
         [HttpPut("{id}")]
         public async Task<CustomerDto> Put(int id, [FromBody] CustomerDto customer)
         {
+            MonitorService.Log.Here().Debug("CustomerController Put");
             try
             {
                 var updatedCustomer = await _repository.Edit(id, _converter.Convert(customer));

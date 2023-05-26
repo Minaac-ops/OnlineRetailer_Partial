@@ -5,6 +5,7 @@ using CustomerApi.Models;
 using Dapr;
 using Dapr.Client;
 using Microsoft.AspNetCore.Mvc;
+using Monitoring;
 using Shared;
 
 namespace CustomerApi.Controllers
@@ -24,43 +25,57 @@ namespace CustomerApi.Controllers
         [HttpPost("/creditChange")]
         public async Task HandleCreditStatusChanged([FromBody] CreditStandingChangedMessage msg)
         {
-            Console.WriteLine("CustomerController received " + msg.CustomerId);
-            var customer = await _repository.Get(msg.CustomerId);
-            customer.CreditStanding = true;
-            await _repository.Edit(customer.Id, customer);
+            MonitorService.Log.Here().Debug("CustomerApi: MessageListener HandleCreditStatusChanged");
+            try
+            {
+                var customer = await _repository.Get(msg.CustomerId);
+                customer.CreditStanding = true;
+                await _repository.Edit(customer.Id, customer);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
 
         [Topic("orderpubsub", "checkCredit")]
         [HttpPost("/checkCredit")]
         public async Task HandleCheckCreditStanding([FromBody] OrderCreatedMessage msg)
         {
-            Console.WriteLine("CUSTOMERLISTENER RECEIVED DAPRMESSAGE. CUSTOMERID: " + msg.CustomerId + " CREATEORDER orderId " + msg.OrderId);
-            var customer = await _repository.Get(msg.CustomerId);
-            Console.WriteLine("CUSTOMERLISTENER checking creditStanding. CREATEORDER " + customer.CreditStanding);
-            using var daprClient = new DaprClientBuilder().Build();
-            if (customer.CreditStanding)
+            MonitorService.Log.Here().Debug("CustomerApi: MessageListener HandleCheckCreditStanding");
+            try
             {
-                await _repository?.Edit(customer.Id, customer);
-                var orderAcceptedMessage = new OrderAcceptedMessage
+                var customer = await _repository.Get(msg.CustomerId);
+            
+                using var daprClient = new DaprClientBuilder().Build();
+                if (customer.CreditStanding)
                 {
-                    OrderId = msg.OrderId,
-                    CustomerId = msg.CustomerId
-                };
-                await daprClient.PublishEventAsync("orderpubsub", "orderAccepted", orderAcceptedMessage);
-                Console.WriteLine("CUSTOMERLISTENER. PUBLISHED ORDERACCEPTED with OrderId " + orderAcceptedMessage.OrderId);
-            } else
-            {
-                var orderRejectedMessage = new OrderRejectedMessage
+                    await _repository?.Edit(customer.Id, customer);
+                    var orderAcceptedMessage = new OrderAcceptedMessage
+                    {
+                        OrderId = msg.OrderId,
+                        CustomerId = msg.CustomerId
+                    };
+                    await daprClient.PublishEventAsync("orderpubsub", "orderAccepted", orderAcceptedMessage);
+                    MonitorService.Log.Here().Debug("CustomerApi: MessageListener Published OrderAcceptedMessage");
+                } else
                 {
-                    OrderId = msg.OrderId,
-                };
+                    var orderRejectedMessage = new OrderRejectedMessage
+                    {
+                        OrderId = msg.OrderId,
+                    };
                 
-                //await bus.PubSub.PublishAsync(orderRejectedMessage);
-                await daprClient.PublishEventAsync("orderpubsub", "orderRejected", orderRejectedMessage);
-                Console.WriteLine("CUSTOMERLISTENER PUBLISHED ORDERREJECTED WITH ORDERID: " + orderRejectedMessage.OrderId);
+                    //await bus.PubSub.PublishAsync(orderRejectedMessage);
+                    await daprClient.PublishEventAsync("orderpubsub", "orderRejected", orderRejectedMessage);
+                    MonitorService.Log.Here().Debug("CustomerApi: MessageListener Published OrderRejectedMessage");
+                }
+                customer.CreditStanding = false;
+                await _repository.Edit(customer.Id,customer);
             }
-            customer.CreditStanding = false;
-            await _repository.Edit(customer.Id,customer);
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
         }
     }
 }
