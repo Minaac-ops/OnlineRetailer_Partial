@@ -1,0 +1,11 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: rabbitmq-subscription
+spec:
+  pubsubname: orderpubsub
+scopes:
+- orderapi
+- customerapi
+- emailservice
+- productapi 
