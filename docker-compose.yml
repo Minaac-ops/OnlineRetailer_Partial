@@ -16,7 +16,7 @@ services:
     image: daprio/daprd:edge
     command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
-      - "./components/:/components"
+      - "./dapr/components/:/components"
     depends_on:
       - orderapi
     network_mode: "service:orderapi"
@@ -34,7 +34,7 @@ services:
     image: daprio/daprd:edge
     command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
     volumes:
-      - "./components/:/components"
+      - "./dapr/components/:/components"
     depends_on:
       - customerapi
     network_mode: "service:customerapi"
@@ -52,7 +52,7 @@ services:
     image: daprio/daprd:edge
     command: ["./daprd", "-app-id", "productapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
     volumes:
-      - "./components/:/components"
+      - "./dapr/components/:/components"
     depends_on:
       - productapi
     network_mode: "service:productapi"
@@ -73,7 +73,7 @@ services:
     image: daprio/daprd:edge
     command: ["./daprd", "-app-id", "emailservice", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
     volumes:
-      - "./components/:/components"
+      - "./dapr/components/:/components"
     depends_on:
       - productapi
     network_mode: "service:emailservice"
@@ -106,4 +106,3 @@ volumes:
   onlineretailer_partial_data:
   zipkin_data:
   featurehub-h2-data:
-  components:
