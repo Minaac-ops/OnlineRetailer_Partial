@@ -78,6 +78,18 @@ services:
       - productapi
     network_mode: "service:emailservice"
 
+  zipkin:
+    image: "openzipkin/zipkin"
+    ports:
+      - 9411:9411
+    environment:
+      - STORAGE_TYPE=mysql
+      - MYSQL_HOST=zipkin-storage
+      - MYSQL_USER=zipkin
+      - MYSQL_PASS=zipkin
+    depends_on:
+      - zipkin-storage
+
   seq:
     image: datalust/seq
     ports:
@@ -87,6 +99,7 @@ services:
       - onlineretailer_partial_data:/data
     environment:
       - ACCEPT_EULA=Y
+      
   featurehub:
     image: featurehub/party-server:latest
     restart: always

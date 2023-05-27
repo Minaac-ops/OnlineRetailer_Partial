@@ -27,7 +27,6 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
             .AddSource("EmailService")
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(MonitorService.ServiceName))
-            .AddAspNetCoreInstrumentation()
             .AddConsoleExporter()
             .AddZipkinExporter(config =>
             {

@@ -1,0 +1,12 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: orderpubsub
+spec:
+  type: pubsub.rabbitmq
+  version: v1
+  metadata:
+  - name: connectionString
+    value: amqps://djgafrdt:N069t12xrumLFnbNr-ZRoCZFtvKQGe7D@sparrow.rmq.cloudamqp.com/djgafrdt
+  - name: protocol
+    value: amqps

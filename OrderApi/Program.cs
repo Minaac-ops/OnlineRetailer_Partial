@@ -19,7 +19,6 @@ builder.Services.AddOpenTelemetry()
         tracerProviderBuilder
             .AddSource("OrderApi")
             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(MonitorService.ServiceName))
-            .AddAspNetCoreInstrumentation()
             .AddConsoleExporter()
             .AddZipkinExporter(config =>
             {

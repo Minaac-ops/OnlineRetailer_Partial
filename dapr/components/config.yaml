@@ -1,12 +1,15 @@
 apiVersion: dapr.io/v1alpha1
-kind: Component
+kind: Configuration
 metadata:
-  name: my-rabbitmq
+  name: daprConfig
 spec:
-  type: pubsub.rabbitmq
-  version: v1
-  metadata:
-  - name: connectionString
-    value: amqps://djgafrdt:N069t12xrumLFnbNr-ZRoCZFtvKQGe7D@sparrow.rmq.cloudamqp.com/djgafrdt
-  - name: protocol
-    value: amqps
+  mtls:
+    enabled: false
+  tracing:
+    enabled: true
+    exporterType: zipkin
+    samplingRate: "1"
+    expandParams: true
+    includeBody: true
+    zipkin:
+      endpointAddress: "http://zipkin:9411/api/v2/spans"
