@@ -16,3 +16,20 @@ scrape_configs:
   - job_name: 'emailservice'
     static_configs:
     - targets: ['emailservice:80']
+
+  - job_name: 'order-dapr'
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['orderapi-dapr:9091']
+  - job_name: 'customer-dapr'
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['customerapi-dapr:9091']
+  - job_name: 'product-dapr'
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['product-dapr:9091']
+  - job_name: 'email-dapr'
+    scrape_interval: 5s
+    static_configs:
+    - targets: ['email-dapr:9091']

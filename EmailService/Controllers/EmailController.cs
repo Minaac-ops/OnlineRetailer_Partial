@@ -3,6 +3,10 @@ using System.Threading.Tasks;
 using EmailService.Infrastructure;
 using EmailService.Models;
 using Microsoft.AspNetCore.Mvc;
+using NuGet.Protocol;
+using RestSharp;
+using Shared;
+
 namespace EmailService.Controllers
 {
 
@@ -22,7 +26,7 @@ namespace EmailService.Controllers
         [HttpGet]
         public async Task<string> Get()
         {
-            var message = new Message(new string[] {"sikypi@givmail.com"},"testname", "testemail", "This is the contect");
+            var message = new Message(new string[] {"customer.Email"},"customer.CompanyName", "testemail", "This is the contect");
             Console.WriteLine(message.To);
             await _emailSender.SendEmail(message);
             return "message send";

@@ -3,8 +3,6 @@ kind: Configuration
 metadata:
   name: daprConfig
 spec:
-  mtls:
-    enabled: false
   tracing:
     enabled: true
     exporterType: zipkin

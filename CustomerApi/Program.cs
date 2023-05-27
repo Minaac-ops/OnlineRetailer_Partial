@@ -2,7 +2,6 @@ using System;
 using CustomerApi.Data;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
@@ -14,7 +13,6 @@ builder.Services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase
 
 // Register repositories for dependency injection
 builder.Services.AddScoped<IRepository<Customer>, CustomerRepository>();
-
 
 // Register database initializer for dependency injection
 builder.Services.AddTransient<IDbInitializer, DbInitializer>();
