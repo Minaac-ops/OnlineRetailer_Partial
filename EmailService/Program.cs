@@ -4,10 +4,9 @@ using EmailService.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddControllers().AddDapr();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -34,9 +33,16 @@ app.MapSubscribeHandler();
     app.UseSwaggerUI();
 }
 
+app.MapMetrics();
+app.UseRouting();
+
+app.UseHttpMetrics();
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseHttpMetrics();
 
 app.MapControllers();
 

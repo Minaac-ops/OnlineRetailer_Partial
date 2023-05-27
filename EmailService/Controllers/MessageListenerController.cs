@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Dapr;
 using EmailService.Infrastructure;
 using EmailService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
-using OpenTelemetry;
-using OpenTelemetry.Context.Propagation;
 using RestSharp;
 using Shared;
 
@@ -32,18 +28,6 @@ namespace EmailService.Controllers
             MonitorService.Log.Here().Debug("EmailService: MessageListener HandleConfirmationEmail");
             try
             {
-                // Propagator to continue the activity from OrderController
-                var propagator = new TraceContextPropagator();
-                var parentCtx = propagator.Extract(default, msg,
-                    (r, key) =>
-                    {
-                        return new List<string>(new[]
-                            {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
-                    });
-                Baggage.Current = parentCtx.Baggage;
-                using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
-                    parentCtx.ActivityContext);
-
                 var customer = await GetCustomer(msg.CustomerId);
                 if (customer.Email != null && customer.CompanyName != null)
                 {
@@ -68,18 +52,6 @@ namespace EmailService.Controllers
 
             try
             {
-                // Propagator to continue the activity from OrderController
-                var propagator = new TraceContextPropagator();
-                var parentCtx = propagator.Extract(default, msg,
-                    (r, key) =>
-                    {
-                        return new List<string>(new[]
-                            {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
-                    });
-                Baggage.Current = parentCtx.Baggage;
-                using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
-                    parentCtx.ActivityContext);
-
                 var customer = await GetCustomer(msg.CustomerId);
                 var message = new Message(new string[] {customer.Email}, customer.CompanyName,
                     "Order cancelled!",
@@ -105,18 +77,6 @@ namespace EmailService.Controllers
             MonitorService.Log.Here().Debug("HandleSendShippedEmail before handle");
             try
             {
-                // Propagator to continue the activity from OrderController
-                var propagator = new TraceContextPropagator();
-                var parentCtx = propagator.Extract(default, msg,
-                    (r, key) =>
-                    {
-                        return new List<string>(new[]
-                            {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
-                    });
-                Baggage.Current = parentCtx.Baggage;
-                using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
-                    parentCtx.ActivityContext);
-            
                 var customer = await GetCustomer(msg.CustomerId);
                 if (customer.Email != null && customer.CompanyName != null)
                 {
@@ -137,7 +97,6 @@ namespace EmailService.Controllers
         {
             try
             {
-                using var activity = MonitorService.ActivitySource.StartActivity();
                 RestClient client = new RestClient("http://customerapi/customer/getCustomer");
                 var request = new RestRequest(customerId.ToString());
 

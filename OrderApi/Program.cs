@@ -6,7 +6,7 @@ using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
 using Shared;
-
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,9 +46,16 @@ using (var scope = app.Services.CreateScope())
     dbInitializer.Initialize(dbContext);
 }
 
+
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
 //app.UseHttpsRedirection();
+
+app.MapMetrics();
+
+app.UseRouting();
+
+app.UseHttpMetrics();
 
 app.UseAuthorization();
 

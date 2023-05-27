@@ -2,12 +2,13 @@ using System;
 using CustomerApi.Data;
 using CustomerApi.Models;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shared;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
 
 builder.Services.AddDbContext<CustomerApiContext>(opt => opt.UseInMemoryDatabase("CustomersDb"));
 
@@ -44,7 +45,11 @@ app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod(
 
 //app.UseHttpsRedirection();
 
+app.MapMetrics();
+
 app.UseAuthorization();
+
+app.UseHttpMetrics();
 
 app.MapControllers();
 

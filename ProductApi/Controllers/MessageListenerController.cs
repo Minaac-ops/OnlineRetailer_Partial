@@ -29,17 +29,6 @@ namespace ProductApi.Controllers
         [HttpPost("/checkProductAvailability")]
         public async Task HandleProductCheck([FromBody] OrderCreatedMessage msg)
         {
-            var propagator = new TraceContextPropagator();
-            var parentCtx = propagator.Extract(default, msg,
-                (r, key) =>
-                {
-                    return new List<string>(new[]
-                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
-                });
-            Baggage.Current = parentCtx.Baggage;
-            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
-                parentCtx.ActivityContext);
-            
             MonitorService.Log.Here().Debug("ProductApi: MessageListener HandleProductCheck");
 
             using var daprClient = new DaprClientBuilder().Build();
@@ -59,12 +48,6 @@ namespace ProductApi.Controllers
                     CustomerId = msg.CustomerId,
                 };
                 
-                // Adding header to the message so the activity can continue in emailService
-                propagator.Inject(parentCtx, orderAcceptedMessage, (r, key, value) =>
-                {
-                    r.Header.Add(key, value);
-                });
-                
                 await daprClient.PublishEventAsync("orderpubsub", "orderAccepted", orderAcceptedMessage);
                 MonitorService.Log.Here().Debug("ProductApi: MessageListener published OrderAcceptedMessage");
             }
@@ -75,13 +58,7 @@ namespace ProductApi.Controllers
                 {
                     OrderId = msg.OrderId
                 };
-                
-                // Adding header to the message so the activity can continue in emailService
-                propagator.Inject(parentCtx, orderRejectedMessage, (r, key, value) =>
-                {
-                    r.Header.Add(key, value);
-                });
-                
+               
                 //await _bus.PubSub.PublishAsync(replyMessage);
                 await daprClient.PublishEventAsync("orderpubsub", "orderRejected", orderRejectedMessage);
                 MonitorService.Log.Here().Debug("ProductApi: MessageListener published OrderRejectedMessage");
@@ -92,17 +69,6 @@ namespace ProductApi.Controllers
         [HttpPost("/productsShipped")]
         public async Task HandleOrderShipped([FromBody] OrderStatusChangedMessage msg)
         {
-            var propagator = new TraceContextPropagator();
-            var parentCtx = propagator.Extract(default, msg,
-                (r, key) =>
-                {
-                    return new List<string>(new[]
-                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
-                });
-            Baggage.Current = parentCtx.Baggage;
-            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
-                parentCtx.ActivityContext);
-            
             MonitorService.Log.Here().Debug("ProductApi: MessageListener HandleOrderShipped");
             foreach (var orderLine in msg.OrderLine)
             {
@@ -116,17 +82,6 @@ namespace ProductApi.Controllers
         [HttpPost("/orderCancelled")]
         public async Task HandleOrderCancelled([FromBody] OrderStatusChangedMessage msg)
         {
-            var propagator = new TraceContextPropagator();
-            var parentCtx = propagator.Extract(default, msg,
-                (r, key) =>
-                {
-                    return new List<string>(new[]
-                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
-                });
-            Baggage.Current = parentCtx.Baggage;
-            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
-                parentCtx.ActivityContext);
-            
             MonitorService.Log.Here().Debug("ProductApi: MessageListener HandleOrderCancelled");
             foreach (var orderLine in msg.OrderLine)
             {

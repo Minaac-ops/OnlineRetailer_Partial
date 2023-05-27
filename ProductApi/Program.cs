@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ProductApi.Data;
 using ProductApi.Models;
 using Shared;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,11 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors(options => options.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 
+app.MapMetrics();
+
+app.UseRouting();
+
+app.UseHttpMetrics();
 
 app.UseAuthorization();
 

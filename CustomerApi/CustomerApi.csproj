@@ -25,6 +25,7 @@
         <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.5" />
         <PackageReference Include="OpenTelemetry" Version="1.4.0" />
         <PackageReference Include="OpenTelemetry.Api" Version="1.4.0" />
+        <PackageReference Include="prometheus-net.AspNetCore" Version="8.0.0" />
         <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     </ItemGroup>
