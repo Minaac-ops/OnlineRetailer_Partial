@@ -14,9 +14,9 @@ services:
 
   orderapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/components"]
+    command: ["./daprd", "-app-id", "orderapi", "-app-port", "80", "-components-path", "/dapr/components"]
     volumes:
-      - "./dapr/components/:/components"
+      - "./dapr/:/dapr"
     depends_on:
       - orderapi
     network_mode: "service:orderapi"
@@ -32,9 +32,9 @@ services:
 
   customerapi-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/components"]
+    command: ["./daprd", "-app-id", "customerapi", "-app-port", "80", "-components-path", "/dapr/components"]
     volumes:
-      - "./dapr/components/:/components"
+      - "./dapr/:/dapr"
     depends_on:
       - customerapi
     network_mode: "service:customerapi"
@@ -50,9 +50,9 @@ services:
 
   product-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "productapi", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "productapi", "-app-port", "80", "-components-path", "/dapr/components", "-log-level", "debug"]
     volumes:
-      - "./dapr/components/:/components"
+      - "./dapr/:/dapr"
     depends_on:
       - productapi
     network_mode: "service:productapi"
@@ -71,9 +71,9 @@ services:
 
   email-dapr:
     image: daprio/daprd:edge
-    command: ["./daprd", "-app-id", "emailservice", "-app-port", "80", "-components-path", "/components", "-log-level", "debug"]
+    command: ["./daprd", "-app-id", "emailservice", "-app-port", "80", "-components-path", "/dapr/components", "-log-level", "debug"]
     volumes:
-      - "./dapr/components/:/components"
+      - "./dapr/:/dapr"
     depends_on:
       - productapi
     network_mode: "service:emailservice"
