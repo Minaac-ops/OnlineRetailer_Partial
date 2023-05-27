@@ -7,6 +7,7 @@ namespace Shared
 {
     public class OrderDto
     {
+        public Dictionary<string, object> Header { get; set; } = new();
         public int Id { get; set; }
         public DateTime? Date { get; set; }
         [JsonConverter(typeof(JsonStringEnumConverter))] 

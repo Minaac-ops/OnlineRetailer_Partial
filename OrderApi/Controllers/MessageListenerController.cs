@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Dapr;
 using Microsoft.AspNetCore.Mvc;
 using Monitoring;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
 using OrderApi.Data;
 using OrderApi.Models;
 using Shared;
@@ -24,6 +28,17 @@ namespace OrderApi.Controllers
         [HttpPost("/orderAccepted")]
         public async Task HandleOrderAccepted([FromBody] OrderAcceptedMessage msg)
         {
+            var propagator = new TraceContextPropagator();
+            var parentCtx = propagator.Extract(default, msg,
+                (r, key) =>
+                {
+                    return new List<string>(new[]
+                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
+                });
+            Baggage.Current = parentCtx.Baggage;
+            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
+                parentCtx.ActivityContext);
+            
             MonitorService.Log.Here().Debug("OrderApi: MessageListener HandleOrderAccepted");
 
             //Mark order as completed
@@ -38,6 +53,17 @@ namespace OrderApi.Controllers
         [HttpPost("/orderRejected")]
         public async Task HandleOrderRejected([FromBody] OrderRejectedMessage msg)
         {
+            var propagator = new TraceContextPropagator();
+            var parentCtx = propagator.Extract(default, msg,
+                (r, key) =>
+                {
+                    return new List<string>(new[]
+                        {r.Header.ContainsKey(key) ? r.Header[key].ToString() : string.Empty});
+                });
+            Baggage.Current = parentCtx.Baggage;
+            using var activity = MonitorService.ActivitySource.StartActivity("Message received", ActivityKind.Consumer,
+                parentCtx.ActivityContext);
+            
             MonitorService.Log.Here().Debug("OrderApi: MessageListener HandleOrderRejected");
 
             //Delete order

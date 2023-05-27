@@ -16,24 +16,27 @@ namespace OrderApi.Infrastructure
         {
             using var daprClient = new DaprClientBuilder().Build();
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher PublishOrderCreatedMessage");
-            var messageCustomer = new OrderCreatedMessage
+
+            var message = new OrderCreatedMessage
             { 
                 CustomerId = customerId,
                 OrderId = orderId,
                 OrderLines = orderLines,
             };
             
-            var messageProduct = new OrderCreatedMessage
-            { 
-                CustomerId = customerId,
-                OrderId = orderId,
-                OrderLines = orderLines,
-            };
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
             
-            await daprClient.PublishEventAsync("orderpubsub", "checkCredit", messageCustomer);
+            await daprClient.PublishEventAsync("orderpubsub", "checkCredit", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher published OrderCreatedMessage to CustomerApi");
             
-            await daprClient.PublishEventAsync("orderpubsub", "checkProductAvailability", messageProduct);
+            await daprClient.PublishEventAsync("orderpubsub", "checkProductAvailability", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher published OrderCreatedMessage to ProductApi");
         }
 
@@ -45,6 +48,15 @@ namespace OrderApi.Infrastructure
             {
                 CustomerId = customerId
             };
+            
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
 
             await daprClient.PublishEventAsync<CreditStandingChangedMessage>("orderpubsub", "creditChange", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher published CreditStandingChangedMessage");
@@ -61,6 +73,15 @@ namespace OrderApi.Infrastructure
                 OrderLine = orderLines
             };
             
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
+            
             await daprClient.PublishEventAsync<OrderStatusChangedMessage>("orderpubsub", $"{topic}", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher Published OrderStatusChangedMessage");
         }
@@ -74,6 +95,15 @@ namespace OrderApi.Infrastructure
                 CustomerId = orderCustomerId,
                 OrderId = orderId
             };
+            
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
 
             await daprClient.PublishEventAsync("orderpubsub", "OrderConfirmed", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher published EmailMessage");
@@ -89,6 +119,15 @@ namespace OrderApi.Infrastructure
                 CustomerId = orderCustomerId,
                 OrderId = orderId
             };
+            
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
 
             await daprClient.PublishEventAsync("orderpubsub", "Cancelled", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher published EmailMessage");
@@ -98,11 +137,21 @@ namespace OrderApi.Infrastructure
         {
             using var daprClient = new DaprClientBuilder().Build();
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher PublishOrderShippedEmail");
+            
             var message = new EmailMessage
             {
                 CustomerId = customerId,
                 OrderId = orderId
             };
+            
+            // Adding header to the message so the activity can continue in emailService
+            var activityCtx = Activity.Current?.Context ?? default;
+            var propagationCtx = new PropagationContext(activityCtx, Baggage.Current);
+            var propagator = new TraceContextPropagator();
+            propagator.Inject(propagationCtx, message, (r, key, value) =>
+            {
+                r.Header.Add(key, value);
+            });
 
             await daprClient.PublishEventAsync("orderpubsub", "Shipped", message);
             MonitorService.Log.Here().Debug("OrderApi: MessagePublisher published EmailMessage");

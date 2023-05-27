@@ -4,9 +4,6 @@ using EmailService.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Monitoring;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,18 +17,6 @@ builder.Services.AddSwaggerGen();
 var emailConfig = builder.Configuration
     .GetSection("MailConfig")
     .Get<EmailConfig>();
-
-//Tele
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracerProviderBuilder =>
-        tracerProviderBuilder
-            .AddSource("EmailService")
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(MonitorService.ServiceName))
-            .AddConsoleExporter()
-            .AddZipkinExporter(config =>
-            {
-                config.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
-            }));
 
 builder.Services.AddSingleton<EmailConfig>(emailConfig);
 builder.Services.AddScoped<IEmailSender, EmailSender>();

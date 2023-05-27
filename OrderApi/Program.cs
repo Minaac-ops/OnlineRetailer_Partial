@@ -2,9 +2,6 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Monitoring;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using OrderApi.Data;
 using OrderApi.Infrastructure;
 using OrderApi.Models;
@@ -12,18 +9,6 @@ using Shared;
 
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Telemetry
-builder.Services.AddOpenTelemetry()
-    .WithTracing(tracerProviderBuilder =>
-        tracerProviderBuilder
-            .AddSource("OrderApi")
-            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(MonitorService.ServiceName))
-            .AddConsoleExporter()
-            .AddZipkinExporter(config =>
-            {
-                config.Endpoint = new Uri("http://zipkin:9411/api/v2/spans");
-            }));
 
 //register services for dependency injection
 
